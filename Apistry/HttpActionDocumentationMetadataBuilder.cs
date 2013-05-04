@@ -77,6 +77,13 @@
             return _HttpControllerDocumentationMetadataBuilder.WebApiDocumentationMetadataBuilder.DocumentController<TOtherApiController>();
         }
 
+        public HttpActionDocumentationMetadataBuilder<TApiController> DescribeAction(Expression<Action<TApiController>> httpActionExpression)
+        {
+            _HttpControllerDocumentationMetadataBuilder.AddDocumentedHttpAction(this);
+
+            return _HttpControllerDocumentationMetadataBuilder.DescribeAction(httpActionExpression);
+        }
+
         public HttpActionDocumentationMetadataBuilder<TApiController> DescribeAction<TAction>(Expression<Func<TApiController, TAction>> httpActionExpression)
         {
             _HttpControllerDocumentationMetadataBuilder.AddDocumentedHttpAction(this);

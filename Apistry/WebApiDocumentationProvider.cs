@@ -38,8 +38,9 @@
             _JsonSerializer = JsonSerializer.Create(
                 new JsonSerializerSettings
                     {
-                        Formatting = Formatting.Indented
-                    });}
+                        Formatting = Formatting.None
+                    });
+        }
 
         public String GetDocumentation(HttpActionDescriptor httpActionDescriptor)
         {
@@ -49,10 +50,13 @@
             }
 
             var reflectedActionDescriptor = (ReflectedHttpActionDescriptor)httpActionDescriptor;
-            var actionDocumentationMetadata = _WebApiDocumentationMetadata
+
+            var controllerDocumentationMetadata = _WebApiDocumentationMetadata
                 .ApiControllerDocumentation
                 .SingleOrDefault(controller => controller.Key.Equals(httpActionDescriptor.ControllerDescriptor.ControllerType))
-                .Value
+                .Value;
+            
+            var actionDocumentationMetadata = controllerDocumentationMetadata
                 .HttpActionDocumentationMetadata
                 .SingleOrDefault(action => action.Method.Equals(reflectedActionDescriptor.MethodInfo));
 
@@ -61,10 +65,17 @@
                 return null;
             }
 
+            var controllerDocumentation = new HttpControllerDocumentation(
+                controllerDocumentationMetadata.ApiControllerType,
+                controllerDocumentationMetadata.ResourceName,
+                controllerDocumentationMetadata.Summary);
+
             var actionRequestDocumentation = CreateHttpActionRequestDocumentation(reflectedActionDescriptor, actionDocumentationMetadata);
             var actionResponseDocumentation = CreateHttpActionResponseDocumentation(actionDocumentationMetadata);
+
             var actionDocumentation =
-                new HttpActionDocumentation(actionDocumentationMetadata.Name,
+                new HttpActionDocumentation(controllerDocumentation,
+                                            actionDocumentationMetadata.Name,
                                             actionDocumentationMetadata.Summary,
                                             actionDocumentationMetadata.Alert,
                                             actionDocumentationMetadata.Information,
@@ -416,19 +427,6 @@
             }
 
             return _Fixture.Value.Create(propertyDescriptor.PropertyType, new SpecimenContext(_Fixture.Value));
-        }
-    }
-
-    internal static class ICollectionExtensions
-    {
-        public static ICollection<T> AddRange<T>(this ICollection<T> collection, IEnumerable<T> items)
-        {
-            foreach (var item in items)
-            {
-                collection.Add(item);
-            }
-
-            return collection;
         }
     }
 }

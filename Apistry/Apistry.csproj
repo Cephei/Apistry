@@ -59,6 +59,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ApiActionDescription.cs" />
     <Compile Include="DtoDocumentationMetadata.cs" />
     <Compile Include="DtoDocumentationMetadataBuilder.cs" />
     <Compile Include="DtoPropertyDocumentationMetadata.cs" />
@@ -71,9 +72,11 @@
     <Compile Include="HttpActionRequestParameterDocumentation.cs" />
     <Compile Include="HttpActionResponseDocumentation.cs" />
     <Compile Include="HttpActionResponseDocumentationMetadata.cs" />
+    <Compile Include="HttpControllerDocumentation.cs" />
     <Compile Include="HttpControllerDocumentationMetadata.cs" />
     <Compile Include="HttpControllerDocumentationMetadataBuilder.cs" />
     <Compile Include="HydratorAdapter.cs" />
+    <Compile Include="ICollectionExtensions.cs" />
     <Compile Include="ObjectHydratorCustomization.cs" />
     <Compile Include="Optional.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

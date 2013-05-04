@@ -4,6 +4,7 @@
 
     public class HttpActionDocumentation
     {
+        private readonly HttpControllerDocumentation _Controller;
         private readonly String _Name;
         private readonly String _Summary;
         private readonly String _Alert;
@@ -11,8 +12,9 @@
         private readonly HttpActionRequestDocumentation _Request;
         private readonly HttpActionResponseDocumentation _Response;
 
-        public HttpActionDocumentation(String name, String summary, String alert, String information, HttpActionRequestDocumentation request, HttpActionResponseDocumentation response)
+        public HttpActionDocumentation(HttpControllerDocumentation controller, String name, String summary, String alert, String information, HttpActionRequestDocumentation request, HttpActionResponseDocumentation response)
         {
+            _Controller = controller;
             _Name = name;
             _Summary = summary;
             _Alert = alert;
@@ -30,11 +32,6 @@
         {
             get { return _Summary; }
         }
-
-        /*public HttpActionRequestParameterDocumentation ParameterDocumentation
-        {
-            get { return _ParameterDocumentation; }
-        }*/
 
         public String Alert
         {
@@ -54,6 +51,11 @@
         public HttpActionResponseDocumentation Response
         {
             get { return _Response; }
+        }
+
+        public HttpControllerDocumentation Controller
+        {
+            get { return _Controller; }
         }
     }
 }

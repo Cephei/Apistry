@@ -110,7 +110,9 @@ namespace Apistry.Tests.Specs
                             .DescribeParameter("role", typeof(String), "The membership role.")
                             .Returns<User>(HttpStatusCode.Created)
                             .Alert("This endpoint is only accessible by administrators.")
-                            .Information("Important information regarding this endpoint.");
+                            .Information("Important information regarding this endpoint.")
+                        .DescribeAction(c => c.PutUser(default(int), default(User)));
+                            
 
             var provider = new WebApiDocumentationProvider(metadata);
 
@@ -123,7 +125,7 @@ namespace Apistry.Tests.Specs
                 JsonSerializer.Create(new JsonSerializerSettings())
                               .Deserialize<HttpActionDocumentation>(
                                   new JsonTextReader(new StringReader(documentation)));
-
+            
             var pDoc = provider.GetDocumentation(
                 new ReflectedHttpParameterDescriptor(
                     new ReflectedHttpActionDescriptor(

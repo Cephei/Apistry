@@ -25,5 +25,9 @@
                           .ReadAsStringAsync()
                           .ContinueWith(task => Request.CreateResponse(HttpStatusCode.Created));
         }
+
+        public void PutUser(Int32 userId, User user)
+        {
+        }
     }
 }

@@ -1,0 +1,21 @@
+﻿@model IEnumerable<Apistry.ApiActionDescription>
+
+@{
+    ViewBag.Title = "Documentation";
+}
+
+<h2>Documentation</h2>
+
+<ul>
+        
+    @foreach (var resource in Model.GroupBy(apiActionDescription => apiActionDescription.Documentation.Controller.ResourceName)) {
+        <li>@resource.First().Documentation.Controller.ResourceName</li>
+
+            <ul>
+                @foreach (var actionDescription in resource.OrderBy(apiActionDescription => apiActionDescription.Documentation.Name)) {
+                    <li>@actionDescription.HttpMethod: @actionDescription.RelativePath</li>
+                }
+            </ul>
+    }
+
+</ul>

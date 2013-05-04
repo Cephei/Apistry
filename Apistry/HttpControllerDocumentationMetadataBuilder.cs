@@ -54,6 +54,39 @@
             return this;
         }
 
+        public HttpActionDocumentationMetadataBuilder<TApiController> DescribeAction(Expression<Action<TApiController>> httpActionExpression)
+        {
+            if (httpActionExpression == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var methodCallExpression = httpActionExpression.Body as MethodCallExpression;
+            if (methodCallExpression == null)
+            {
+                throw new InvalidOperationException();
+            }
+
+            var method = typeof(TApiController)
+                .GetMethod(
+                    methodCallExpression.Method.Name,
+                    BindingFlags.Instance |
+                    BindingFlags.Public |
+                    BindingFlags.IgnoreCase |
+                    BindingFlags.DeclaredOnly,
+                    null,
+                    CallingConventions.Any,
+                    methodCallExpression.Arguments.Select(arg => arg.Type).ToArray(),
+                    null);
+
+            if (Contains(method))
+            {
+                throw new InvalidOperationException(String.Format("You cannot configure the same action, '{0}', more than once.", methodCallExpression.Method.Name));
+            }
+
+            return new HttpActionDocumentationMetadataBuilder<TApiController>(this, method);
+        }
+    
         public HttpActionDocumentationMetadataBuilder<TApiController> DescribeAction<TAction>(Expression<Func<TApiController, TAction>> httpActionExpression)
         {
             if (httpActionExpression == null)
