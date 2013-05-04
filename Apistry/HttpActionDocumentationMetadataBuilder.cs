@@ -114,7 +114,7 @@
             return this;
         }
 
-        public HttpActionDocumentationMetadataBuilder<TApiController> Returns<TDto>(HttpStatusCode statusCode = HttpStatusCode.OK, String description = null) where TDto : new()
+        public HttpActionDocumentationMetadataBuilder<TApiController> Returns<TDto>(HttpStatusCode statusCode = HttpStatusCode.OK, String description = null)
         {
             if (_ResponseDescriptor.Value != _ResponseDescriptor.OriginalValue)
             {

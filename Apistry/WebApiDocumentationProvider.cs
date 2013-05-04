@@ -1,7 +1,6 @@
 ﻿namespace Apistry
 {
     using System;
-    using System.Collections;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Dynamic;
@@ -14,10 +13,10 @@
     using System.Web.Http;
     using System.Web.Http.Controllers;
     using System.Web.Http.Description;
-    using FakeItEasy;
+
     using Newtonsoft.Json;
+
     using Ploeh.AutoFixture;
-    using Ploeh.AutoFixture.AutoFakeItEasy;
     using Ploeh.AutoFixture.Kernel;
 
     public class WebApiDocumentationProvider : IDocumentationProvider
@@ -26,12 +25,12 @@
         private readonly JsonSerializer _JsonSerializer;
         private readonly Lazy<IFixture> _Fixture = new Lazy<IFixture>(() =>
             {
-                var fixture = new Fixture().Customize(new MultipleCustomization());
+                var fixture = new Fixture().Customize(new CompositeCustomization(new ObjectHydratorCustomization()));
                 fixture.Behaviors.Remove(new ThrowingRecursionBehavior());
                 fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
                 return fixture;
-            }); 
+            });
 
         public WebApiDocumentationProvider(WebApiDocumentationMetadata webApiDocumentationMetadata)
         {
@@ -195,14 +194,18 @@
         private HttpActionResponseDocumentation CreateHttpActionResponseDocumentation(HttpActionDocumentationMetadata actionDocumentationMetadata)
         {
             if (actionDocumentationMetadata.HttpActionResponseDocumentationMetadata == null ||
-                actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type == null ||
-                !_WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type))
+                actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type == null)
             {
                 return null;
             }
 
-            DtoDocumentationMetadata dtoDocumentationMetadata =
-                _WebApiDocumentationMetadata.DtoDocumentation[actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type];
+            Type responseType = GetResponseType(actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type);
+            if (!_WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(responseType))
+            {
+                return null;
+            }
+
+            DtoDocumentationMetadata dtoDocumentationMetadata = _WebApiDocumentationMetadata.DtoDocumentation[responseType];
 
             // Set the response status code.
             HttpStatusCode statusCode = actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.StatusCode;
@@ -212,41 +215,153 @@
                                   dtoDocumentationMetadata.Summary;
 
             // Generate documentation for the response object's properties.
-            var propertyDescriptors = TypeDescriptor.GetProperties(dtoDocumentationMetadata.Type);
-            var responseProperties = 
-                dtoDocumentationMetadata.Type
-                                             .GetProperties(BindingFlags.Instance | BindingFlags.Public)
-                                             .Where(pi => pi.GetCustomAttributes(true)
-                                                            .All(attribute =>
-                                                                 !(attribute is NonSerializedAttribute) &&
-                                                                 !(attribute is IgnoreDataMemberAttribute)))
-                                             .Select(pi => propertyDescriptors[pi.Name])
-                                             .ToList();
-
-            IList<PropertyDocumentation> documentedProperties = new List<PropertyDocumentation>();
-            foreach (var responsePropertyDescriptor in responseProperties)
-            {
-                var propertyDocumentationMetadata = dtoDocumentationMetadata
-                    .PropertyDocumentationMetadata
-                    .SingleOrDefault(pd => pd.Property.Equals(responsePropertyDescriptor));
-
-                var propertyDescription = propertyDocumentationMetadata == null ? String.Empty : propertyDocumentationMetadata.Description;
-
-                documentedProperties.Add(
-                    new PropertyDocumentation(
-                        responsePropertyDescriptor.Name,
-                        responsePropertyDescriptor.PropertyType.Name,
-                        propertyDescription));
-            }
+            var documentedProperties = CreatePropertyDocumentation(dtoDocumentationMetadata, String.Empty);
 
             // Create an example response object.
             var responseExample = CreateResponseContentExample(dtoDocumentationMetadata);
 
-            return new HttpActionResponseDocumentation(
-                responseSummary,
-                statusCode,
-                documentedProperties,
-                responseExample);
+            return new HttpActionResponseDocumentation(responseSummary, statusCode, documentedProperties, responseExample);
+        }
+
+        private IEnumerable<PropertyDocumentation> CreatePropertyDocumentation(DtoDocumentationMetadata dtoDocumentationMetadata, String propertyPrefix)
+        {
+            if (propertyPrefix == null)
+            {
+                propertyPrefix = String.Empty;
+            }
+
+            IList<PropertyDocumentation> propertyDocumentation = new List<PropertyDocumentation>();
+            var propertyDescriptors = TypeDescriptor.GetProperties(dtoDocumentationMetadata.Type)
+                                                    .Cast<PropertyDescriptor>()
+                                                    .Where(pi => pi.PropertyType.GetCustomAttributes(true)
+                                                    .All(attribute =>
+                                                            !(attribute is NonSerializedAttribute) &&
+                                                            !(attribute is IgnoreDataMemberAttribute)))
+                                                    .Select(pi => pi)
+                                                    .ToList();
+
+            foreach (var propertyDescriptor in propertyDescriptors)
+            {
+                var documentedProperty = 
+                    dtoDocumentationMetadata.PropertyDocumentationMetadata
+                                            .SingleOrDefault(
+                                                metadata => 
+                                                metadata.Property.Name.Equals(propertyDescriptor.Name) && 
+                                                metadata.Property.PropertyType.Equals(propertyDescriptor.PropertyType));
+
+                if (!TypeHelper.CanConvertFromString(propertyDescriptor.PropertyType) &&
+                    _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(propertyDescriptor.PropertyType))
+                {
+                    propertyDocumentation.Add(
+                        new PropertyDocumentation(
+                            GetPropertyNamePrefix(propertyDescriptor, propertyPrefix),
+                            GetProperyTypeName(propertyDescriptor),
+                            _WebApiDocumentationMetadata.DtoDocumentation[propertyDescriptor.PropertyType].Summary));
+
+                    propertyDocumentation.AddRange(
+                        CreatePropertyDocumentation(
+                            _WebApiDocumentationMetadata.DtoDocumentation[propertyDescriptor.PropertyType],
+                            String.Format("{0}{1}{2}", propertyPrefix, String.IsNullOrWhiteSpace(propertyPrefix) ? String.Empty : ".", propertyDescriptor.Name)));
+                }
+                else if (!TypeHelper.CanConvertFromString(propertyDescriptor.PropertyType) &&
+                         GetEnumerableType(propertyDescriptor.PropertyType) != null &&
+                         _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(propertyDescriptor.PropertyType.GetGenericArguments().First()))
+                {
+                    var genericPropertyType = propertyDescriptor.PropertyType.GetGenericArguments().First();
+
+                    propertyDocumentation.Add(
+                        new PropertyDocumentation(
+                            GetPropertyNamePrefix(propertyDescriptor, propertyPrefix),
+                            GetProperyTypeName(propertyDescriptor),
+                            _WebApiDocumentationMetadata.DtoDocumentation[genericPropertyType].Summary));
+
+                    if (propertyPrefix.Contains(propertyDescriptor.Name) || genericPropertyType.Equals(dtoDocumentationMetadata.Type))
+                    {
+                        continue; // Prevent circular dependencies.
+                    }
+
+                    propertyDocumentation.AddRange(
+                        CreatePropertyDocumentation(
+                            _WebApiDocumentationMetadata.DtoDocumentation[genericPropertyType],
+                            String.Format("{0}{1}{2}", propertyPrefix, String.IsNullOrWhiteSpace(propertyPrefix) ? String.Empty : ".", propertyDescriptor.Name)));
+                }
+                else
+                {
+                    propertyDocumentation.Add(
+                        new PropertyDocumentation(
+                            GetPropertyNamePrefix(propertyDescriptor, propertyPrefix),
+                            GetProperyTypeName(propertyDescriptor),
+                            documentedProperty == null ? String.Empty : documentedProperty.Description));
+                }
+            }
+
+            return propertyDocumentation;
+        }
+
+        private String GetPropertyNamePrefix(PropertyDescriptor propertyDescriptor, String existingPrefix)
+        {
+            var propertyName = propertyDescriptor.Name;
+            if (propertyDescriptor.PropertyType.IsGenericType)
+            {
+                if (GetEnumerableType(propertyDescriptor.PropertyType) != null)
+                {
+                    propertyName += "[]";
+                }
+            }
+
+            return String.Format(
+                "{0}{1}{2}",
+                existingPrefix,
+                String.IsNullOrWhiteSpace(existingPrefix) ? String.Empty : ".",
+                propertyName);
+        }
+
+        private String GetProperyTypeName(PropertyDescriptor propertyDescriptor)
+        {
+            if (propertyDescriptor.PropertyType.IsGenericType)
+            {
+                if (propertyDescriptor.PropertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                {
+                    return String.Format("list ({0})", propertyDescriptor.PropertyType.GetGenericArguments().Single().Name);
+                }
+            }
+            else if (typeof(Byte[]).IsAssignableFrom(propertyDescriptor.PropertyType))
+            {
+                return "binary";
+            }
+            else if (!TypeHelper.CanConvertFromString(propertyDescriptor.PropertyType))
+            {
+                return String.Format("object ({0})", propertyDescriptor.PropertyType.Name);
+            }
+
+            return propertyDescriptor.PropertyType.Name;
+        }
+
+        private static Type GetResponseType(Type type)
+        {
+            return !type.IsGenericType ? type : GetEnumerableType(type);
+        }
+
+        private static Type GetEnumerableType(Type type)
+        {
+            if (type == typeof(String))
+            {
+                return typeof(String);
+            }
+
+            if (type.IsGenericType)
+            {
+                if (type.GetGenericTypeDefinition() == typeof (IEnumerable<>))
+                {
+                    return type.GetGenericArguments().First();
+                }
+
+                return (from intType in type.GetInterfaces()
+                        where intType.GetGenericTypeDefinition() == typeof(IEnumerable<>)
+                        select intType.GetGenericArguments()[0]).FirstOrDefault();
+            }
+
+            return null;
         }
 
         private Object CreateResponseContentExample(DtoDocumentationMetadata dtoDocumentationMetadata)
@@ -301,6 +416,19 @@
             }
 
             return _Fixture.Value.Create(propertyDescriptor.PropertyType, new SpecimenContext(_Fixture.Value));
+        }
+    }
+
+    internal static class ICollectionExtensions
+    {
+        public static ICollection<T> AddRange<T>(this ICollection<T> collection, IEnumerable<T> items)
+        {
+            foreach (var item in items)
+            {
+                collection.Add(item);
+            }
+
+            return collection;
         }
     }
 }

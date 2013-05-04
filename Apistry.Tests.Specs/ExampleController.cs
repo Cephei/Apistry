@@ -9,7 +9,17 @@
 
     public class ExampleController : ApiController
     {
-        public Task<HttpResponseMessage> CreateUser(Int32 siteId, User user, String role = null)
+        public HttpResponseMessage GetUser(Int32 userId)
+        {
+            return Request.CreateResponse(HttpStatusCode.OK);
+        }
+
+        public HttpResponseMessage GetUsers()
+        {
+            return Request.CreateResponse(HttpStatusCode.OK);
+        }
+
+        public Task<HttpResponseMessage> PostUser(Int32 siteId, User user, String role = null)
         {
             return Request.Content
                           .ReadAsStringAsync()
