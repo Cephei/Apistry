@@ -11,7 +11,7 @@
         private readonly String _Information;
         private readonly HttpActionRequestDocumentation _Request;
         private readonly HttpActionResponseDocumentation _Response;
-
+        
         public HttpActionDocumentation(HttpControllerDocumentation controller, String name, String summary, String alert, String information, HttpActionRequestDocumentation request, HttpActionResponseDocumentation response)
         {
             _Controller = controller;

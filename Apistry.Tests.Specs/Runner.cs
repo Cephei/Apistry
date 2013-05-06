@@ -19,6 +19,7 @@ namespace Apistry.Tests.Specs
     using Machine.Specifications;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
+    using Polenter.Serialization;
 
     class Runner
     {

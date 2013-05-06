@@ -18,6 +18,7 @@
 
     using Ploeh.AutoFixture;
     using Ploeh.AutoFixture.Kernel;
+    using Polenter.Serialization;
 
     public class WebApiDocumentationProvider : IDocumentationProvider
     {
@@ -42,7 +43,7 @@
                     });
         }
 
-        public String GetDocumentation(HttpActionDescriptor httpActionDescriptor)
+        public HttpActionDocumentation GetHttpActionDocumentation(HttpActionDescriptor httpActionDescriptor)
         {
             if (!_WebApiDocumentationMetadata.ApiControllerDocumentation.ContainsKey(httpActionDescriptor.ControllerDescriptor.ControllerType))
             {
@@ -55,7 +56,7 @@
                 .ApiControllerDocumentation
                 .SingleOrDefault(controller => controller.Key.Equals(httpActionDescriptor.ControllerDescriptor.ControllerType))
                 .Value;
-            
+
             var actionDocumentationMetadata = controllerDocumentationMetadata
                 .HttpActionDocumentationMetadata
                 .SingleOrDefault(action => action.Method.Equals(reflectedActionDescriptor.MethodInfo));
@@ -73,7 +74,7 @@
             var actionRequestDocumentation = CreateHttpActionRequestDocumentation(reflectedActionDescriptor, actionDocumentationMetadata);
             var actionResponseDocumentation = CreateHttpActionResponseDocumentation(actionDocumentationMetadata);
 
-            var actionDocumentation =
+            return 
                 new HttpActionDocumentation(controllerDocumentation,
                                             actionDocumentationMetadata.Name,
                                             actionDocumentationMetadata.Summary,
@@ -81,7 +82,12 @@
                                             actionDocumentationMetadata.Information,
                                             actionRequestDocumentation,
                                             actionResponseDocumentation);
+        }
 
+        public String GetDocumentation(HttpActionDescriptor httpActionDescriptor)
+        {
+            var actionDocumentation = GetHttpActionDocumentation(httpActionDescriptor);
+            
             using (var stringWriter = new StringWriter())
             using (var jsonTextWriter = new JsonTextWriter(stringWriter))
             {
@@ -204,34 +210,39 @@
 
         private HttpActionResponseDocumentation CreateHttpActionResponseDocumentation(HttpActionDocumentationMetadata actionDocumentationMetadata)
         {
-            if (actionDocumentationMetadata.HttpActionResponseDocumentationMetadata == null ||
-                actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type == null)
+            if (actionDocumentationMetadata.HttpActionResponseDocumentationMetadata == null)
             {
                 return null;
             }
-
-            Type responseType = GetResponseType(actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type);
-            if (!_WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(responseType))
-            {
-                return null;
-            }
-
-            DtoDocumentationMetadata dtoDocumentationMetadata = _WebApiDocumentationMetadata.DtoDocumentation[responseType];
 
             // Set the response status code.
             HttpStatusCode statusCode = actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.StatusCode;
 
             // Set the summary which describes the data returned by the HTTP action.
-            var responseSummary = actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Summary ??
-                                  dtoDocumentationMetadata.Summary;
+            String responseSummary = actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Summary;
 
-            // Generate documentation for the response object's properties.
-            var documentedProperties = CreatePropertyDocumentation(dtoDocumentationMetadata, String.Empty);
+            IEnumerable<PropertyDocumentation> documentedProperties = null;
+            Object responseExample = null;
+            Type responseType = GetResponseType(actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type);
+            if (responseType != null && _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(responseType))
+            {
+                DtoDocumentationMetadata dtoDocumentationMetadata = _WebApiDocumentationMetadata.DtoDocumentation[responseType];
+                
+                // Set the summary which describes the data returned by the HTTP action.
+                responseSummary = responseSummary ?? dtoDocumentationMetadata.Summary;
 
-            // Create an example response object.
-            var responseExample = CreateResponseContentExample(dtoDocumentationMetadata);
+                // Generate documentation for the response object's properties.
+                documentedProperties = CreatePropertyDocumentation(dtoDocumentationMetadata, String.Empty);
 
-            return new HttpActionResponseDocumentation(responseSummary, statusCode, documentedProperties, responseExample);
+                // Create an example response object.
+                responseExample = CreateResponseContentExample(dtoDocumentationMetadata);
+            }
+
+            return new HttpActionResponseDocumentation(
+                responseSummary, 
+                statusCode, 
+                documentedProperties ?? Enumerable.Empty<PropertyDocumentation>(), 
+                responseExample);
         }
 
         private IEnumerable<PropertyDocumentation> CreatePropertyDocumentation(DtoDocumentationMetadata dtoDocumentationMetadata, String propertyPrefix)
@@ -350,7 +361,7 @@
 
         private static Type GetResponseType(Type type)
         {
-            return !type.IsGenericType ? type : GetEnumerableType(type);
+            return type == null || !type.IsGenericType ? type : GetEnumerableType(type);
         }
 
         private static Type GetEnumerableType(Type type)
