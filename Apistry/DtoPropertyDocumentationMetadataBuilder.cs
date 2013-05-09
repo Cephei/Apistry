@@ -6,6 +6,7 @@
     using System.Linq;
     using System.Linq.Expressions;
     using System.Net.Http;
+    using System.Text.RegularExpressions;
     using System.Web.Http.Controllers;
 
     public class DtoPropertyDocumentationMetadataBuilder<TDto, TProperty>
@@ -14,7 +15,7 @@
 
         private readonly PropertyDescriptor _Property;
 
-        private readonly Optional<string> _Description;
+        private readonly Optional<String> _Description;
 
         private readonly Optional<TProperty> _ExampleValue;
 
@@ -27,7 +28,7 @@
 
             _Description = new Optional<string>(String.Empty);
             _ExampleValue = new Optional<TProperty>(default(TProperty));
-            _RequiredMethods = new Optional<ISet<System.Net.Http.HttpMethod>>(null);
+            _RequiredMethods = new Optional<ISet<HttpMethod>>(null);
         }
 
         public static implicit operator WebApiDocumentationMetadata(DtoPropertyDocumentationMetadataBuilder<TDto, TProperty> builder)
@@ -69,7 +70,7 @@
         {
             if (description == null) return this;
 
-            _Description.Value = description.Trim();
+            _Description.Value = StringHelper.RemoveMultipleSpaces(description);
 
             return this;
         }
@@ -81,7 +82,7 @@
             return this;
         }
 
-        public DtoPropertyDocumentationMetadataBuilder<TDto, TProperty> IsRequired(params System.Net.Http.HttpMethod[] httpMethods)
+        public DtoPropertyDocumentationMetadataBuilder<TDto, TProperty> IsRequired(params HttpMethod[] httpMethods)
         {
             if (httpMethods == null)
             {
@@ -91,15 +92,15 @@
 
             if (!httpMethods.Any())
             {
-                _RequiredMethods.Value = new HashSet<System.Net.Http.HttpMethod>();
+                _RequiredMethods.Value = new HashSet<HttpMethod>();
                 return this;
             }
 
-            _RequiredMethods.Value = new HashSet<System.Net.Http.HttpMethod>(httpMethods);
+            _RequiredMethods.Value = new HashSet<HttpMethod>(httpMethods);
             return this;
         }
 
-        public DtoPropertyDocumentationMetadataBuilder<TDto, TProperty> For<TProperty>(Expression<Func<TDto, TProperty>> propertyExpression)
+        public DtoPropertyDocumentationMetadataBuilder<TDto, TOtherProperty> For<TOtherProperty>(Expression<Func<TDto, TOtherProperty>> propertyExpression)
         {
             _DtoDocumentationMetadataBuilder.AddDocumentedProperty(this);
 
@@ -120,7 +121,16 @@
                 throw new InvalidOperationException("You cannot configure the same property more than once.");
             }
 
-            return new DtoPropertyDocumentationMetadataBuilder<TDto, TProperty>(_DtoDocumentationMetadataBuilder, property);
+            return new DtoPropertyDocumentationMetadataBuilder<TDto, TOtherProperty>(_DtoDocumentationMetadataBuilder, property);
+        }
+
+        public void Build()
+        {
+            if (!_DtoDocumentationMetadataBuilder.Contains(_Property))
+            {
+                _DtoDocumentationMetadataBuilder.AddDocumentedProperty(this);
+                _DtoDocumentationMetadataBuilder.WebApiDocumentationMetadataBuilder.AddDocumentedDto<TDto>(_DtoDocumentationMetadataBuilder);
+            }
         }
     }
 }

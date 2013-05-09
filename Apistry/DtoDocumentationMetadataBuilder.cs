@@ -69,5 +69,13 @@
         {
             _PropertyDocumentation.Add(dtoPropertyDocumentationMetadata);
         }
+
+        public void Build()
+        {
+            if (!WebApiDocumentationMetadataBuilder.Contains(this))
+            {
+                WebApiDocumentationMetadataBuilder.AddDocumentedDto<TDto>(this);
+            }
+        }
     }
 }

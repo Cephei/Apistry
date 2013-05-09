@@ -43,9 +43,6 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\packages\AutoFixture.3.0.8\lib\net40\Ploeh.AutoFixture.dll</HintPath>
     </Reference>
-    <Reference Include="Polenter.SharpSerializer">
-      <HintPath>..\packages\SharpSerializer.2.18\lib\net20\Polenter.SharpSerializer.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Net.Http" />
@@ -86,6 +83,7 @@
     <Compile Include="Optional.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyDocumentation.cs" />
+    <Compile Include="StringHelper.cs" />
     <Compile Include="TypeHelper.cs" />
     <Compile Include="WebApiDocumentationMetadata.cs" />
     <Compile Include="WebApiDocumentationMetadataBuilder.cs" />

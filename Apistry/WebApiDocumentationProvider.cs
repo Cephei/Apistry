@@ -18,7 +18,6 @@
 
     using Ploeh.AutoFixture;
     using Ploeh.AutoFixture.Kernel;
-    using Polenter.Serialization;
 
     public class WebApiDocumentationProvider : IDocumentationProvider
     {
@@ -42,15 +41,21 @@
                         Formatting = Formatting.None
                     });
         }
-
+        
         public HttpActionDocumentation GetHttpActionDocumentation(HttpActionDescriptor httpActionDescriptor)
         {
+            var reflectedActionDescriptor = (ReflectedHttpActionDescriptor)httpActionDescriptor;
             if (!_WebApiDocumentationMetadata.ApiControllerDocumentation.ContainsKey(httpActionDescriptor.ControllerDescriptor.ControllerType))
             {
-                return null;
+                return new HttpActionDocumentation(
+                    CreateDefaultControllerDocumentation(reflectedActionDescriptor),
+                    reflectedActionDescriptor.ActionName,
+                    String.Empty,
+                    String.Empty,
+                    String.Empty,
+                    CreateDefaultRequestDocumentation(reflectedActionDescriptor),
+                    CreateDefaultResponseDocumentation(reflectedActionDescriptor));
             }
-
-            var reflectedActionDescriptor = (ReflectedHttpActionDescriptor)httpActionDescriptor;
 
             var controllerDocumentationMetadata = _WebApiDocumentationMetadata
                 .ApiControllerDocumentation
@@ -99,6 +104,11 @@
 
         public String GetDocumentation(HttpParameterDescriptor httpParameterDescriptor)
         {
+            if (!_WebApiDocumentationMetadata.ApiControllerDocumentation.ContainsKey(httpParameterDescriptor.ActionDescriptor.ControllerDescriptor.ControllerType))
+            {
+                return null;
+            }
+
             var reflectedActionDescriptor = (ReflectedHttpActionDescriptor)httpParameterDescriptor.ActionDescriptor;
             var actionDocumentationMetadata = _WebApiDocumentationMetadata
                 .ApiControllerDocumentation
@@ -176,11 +186,21 @@
                                                                 !TypeHelper.CanConvertFromString(binding.Descriptor.ParameterType) &&
                                                                 binding.WillReadBody);
 
-            IDictionary<String, Object> requestBodyExample = null;
-            if (formatterParameterBinding != null && _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(formatterParameterBinding.Descriptor.ParameterType))
+            if (formatterParameterBinding == null)
             {
-                var dtoDocumentationMetadata = _WebApiDocumentationMetadata.DtoDocumentation[formatterParameterBinding.Descriptor.ParameterType];
+                return null;
+            }
+
+            IDictionary<String, Object> requestBodyExample;
+            var parameterType = GetEnumerableType(formatterParameterBinding.Descriptor.ParameterType);
+            if (_WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(parameterType))
+            {
+                var dtoDocumentationMetadata = _WebApiDocumentationMetadata.DtoDocumentation[parameterType];
                 requestBodyExample = CreateRequestBodyExample(httpActionDescriptor, dtoDocumentationMetadata);
+            }
+            else
+            {
+                requestBodyExample = CreateDefaultRequestBodyExample(httpActionDescriptor, parameterType);
             }
 
             return requestBodyExample;
@@ -344,7 +364,12 @@
             {
                 if (propertyDescriptor.PropertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-                    return String.Format("list ({0})", propertyDescriptor.PropertyType.GetGenericArguments().Single().Name);
+                    return String.Format("{0} (list)", propertyDescriptor.PropertyType.GetGenericArguments().Single().Name);
+                }
+                
+                if (propertyDescriptor.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                {
+                    return String.Format("{0} (nullable)", propertyDescriptor.PropertyType.GetGenericArguments().Single().Name);
                 }
             }
             else if (typeof(Byte[]).IsAssignableFrom(propertyDescriptor.PropertyType))
@@ -353,7 +378,7 @@
             }
             else if (!TypeHelper.CanConvertFromString(propertyDescriptor.PropertyType))
             {
-                return String.Format("object ({0})", propertyDescriptor.PropertyType.Name);
+                return String.Format("{0} (object)", propertyDescriptor.PropertyType.Name);
             }
 
             return propertyDescriptor.PropertyType.Name;
@@ -373,7 +398,7 @@
 
             if (type.IsGenericType)
             {
-                if (type.GetGenericTypeDefinition() == typeof (IEnumerable<>))
+                if (type.GetGenericArguments().Count() == 1)
                 {
                     return type.GetGenericArguments().First();
                 }
@@ -383,7 +408,7 @@
                         select intType.GetGenericArguments()[0]).FirstOrDefault();
             }
 
-            return null;
+            return type;
         }
 
         private Object CreateResponseContentExample(DtoDocumentationMetadata dtoDocumentationMetadata)
@@ -437,7 +462,65 @@
                 }
             }
 
-            return _Fixture.Value.Create(propertyDescriptor.PropertyType, new SpecimenContext(_Fixture.Value));
+            return GetOrCreateExampleValue(propertyDescriptor.PropertyType);
+        }
+
+        private Object GetOrCreateExampleValue(Type type)
+        {
+            try
+            {
+                return _Fixture.Value.Create(type, new SpecimenContext(_Fixture.Value));
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        private HttpControllerDocumentation CreateDefaultControllerDocumentation(HttpActionDescriptor actionDescriptor)
+        {
+            return new HttpControllerDocumentation(
+                actionDescriptor.ControllerDescriptor.ControllerType,
+                actionDescriptor.ControllerDescriptor.ControllerName,
+                String.Empty);
+        }
+
+        private HttpActionRequestDocumentation CreateDefaultRequestDocumentation(HttpActionDescriptor actionDescriptor)
+        {
+            return new HttpActionRequestDocumentation(
+                actionDescriptor.GetParameters()
+                                .Where(p => p.ParameterBinderAttribute is FromUriAttribute || TypeHelper.CanConvertFromString(p.ParameterType))
+                                .Select(p => new HttpActionRequestParameterDocumentation(p.ParameterName, p.ParameterType.Name, String.Empty, !p.IsOptional)),
+                CreateHttpActionRequestBody(actionDescriptor));
+        }
+
+        private IDictionary<String, Object> CreateDefaultRequestBodyExample(HttpActionDescriptor httpActionDescriptor, Type dto)
+        {
+            IDictionary<String, Object> requestBodyExample = new ExpandoObject();
+            foreach (var dtoProperty in dto.GetProperties())
+            {
+                if (!TypeHelper.CanConvertFromString(dtoProperty.PropertyType) &&
+                    _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(dtoProperty.PropertyType))
+                {
+                    requestBodyExample[dtoProperty.Name] =
+                        CreateRequestBodyExample(httpActionDescriptor, _WebApiDocumentationMetadata.DtoDocumentation[dtoProperty.PropertyType]);
+                }
+                else
+                {
+                    requestBodyExample[dtoProperty.Name] = GetOrCreateExampleValue(dtoProperty.PropertyType);
+                }
+            }
+
+            return requestBodyExample;
+        }
+
+        private HttpActionResponseDocumentation CreateDefaultResponseDocumentation(HttpActionDescriptor actionDescriptor)
+        {
+            return new HttpActionResponseDocumentation(
+                String.Empty,
+                HttpStatusCode.OK,
+                Enumerable.Empty<PropertyDocumentation>(),
+                null);
         }
     }
 }

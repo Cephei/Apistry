@@ -42,14 +42,14 @@
 
         public HttpControllerDocumentationMetadataBuilder<TApiController> Resource(String resourceName)
         {
-            _ResourceName = resourceName;
+            _ResourceName = resourceName.Trim();
 
             return this;
         }
 
-        public HttpControllerDocumentationMetadataBuilder<TApiController> Summary(String summaryFormat, params Object[] summaryParams)
+        public HttpControllerDocumentationMetadataBuilder<TApiController> Summary(String summary)
         {
-            _Summary = String.Format(summaryFormat, summaryParams);
+            _Summary = StringHelper.RemoveMultipleSpaces(summary);
 
             return this;
         }
@@ -128,6 +128,14 @@
         protected internal void AddDocumentedHttpAction(HttpActionDocumentationMetadata httpActionDocumentationMetadata)
         {
             _HttpActionDocumentation.Add(httpActionDocumentationMetadata);
+        }
+
+        public void Build()
+        {
+            if (!WebApiDocumentationMetadataBuilder.Contains(this))
+            {
+                WebApiDocumentationMetadataBuilder.AddDocumentedApiController<TApiController>(this);
+            }
         }
     }
 }

@@ -14,29 +14,29 @@
 
         private readonly MethodInfo _Method;
 
-        private readonly Optional<string> _Name;
+        private readonly Optional<String> _Name;
 
-        private readonly Optional<string> _Summary;
+        private readonly Optional<String> _Summary;
 
         private readonly Optional<HttpActionResponseDocumentationMetadata> _ResponseDescriptor;
 
         private readonly Optional<ISet<HttpActionParameterDocumentationMetadata>> _HttpActionParameters;
 
-        private readonly Optional<string> _Alert;
+        private readonly Optional<String> _Alert;
 
-        private readonly Optional<string> _Information;
+        private readonly Optional<String> _Information;
 
         public HttpActionDocumentationMetadataBuilder(HttpControllerDocumentationMetadataBuilder<TApiController> httpControllerDocumentationMetadataBuilder, MethodInfo method)
         {
             _HttpControllerDocumentationMetadataBuilder = httpControllerDocumentationMetadataBuilder;
             _Method = method;
 
-            _Name = new Optional<string>(String.Empty);
-            _Summary = new Optional<string>(String.Empty);
+            _Name = new Optional<String>(String.Empty);
+            _Summary = new Optional<String>(String.Empty);
             _ResponseDescriptor = new Optional<HttpActionResponseDocumentationMetadata>(null);
             _HttpActionParameters = new Optional<ISet<HttpActionParameterDocumentationMetadata>>(new HashSet<HttpActionParameterDocumentationMetadata>());
-            _Alert = new Optional<string>(String.Empty);
-            _Information = new Optional<string>(String.Empty);
+            _Alert = new Optional<String>(String.Empty);
+            _Information = new Optional<String>(String.Empty);
         }
 
         public static implicit operator WebApiDocumentationMetadata(HttpActionDocumentationMetadataBuilder<TApiController> builder)
@@ -100,11 +100,11 @@
             return this;
         }
 
-        public HttpActionDocumentationMetadataBuilder<TApiController> Summary(String summaryFormat, params Object[] summaryParams)
+        public HttpActionDocumentationMetadataBuilder<TApiController> Summary(String summary)
         {
-            if (summaryFormat == null) return this;
+            if (summary == null) return this;
 
-            _Summary.Value = String.Format(summaryFormat, summaryParams).Trim();
+            _Summary.Value = StringHelper.RemoveMultipleSpaces(summary);
 
             return this;
         }
@@ -133,16 +133,16 @@
             return this;
         }
 
-        public HttpActionDocumentationMetadataBuilder<TApiController> DescribeParameter(String parameterName, Type parameterType)
+        public HttpActionDocumentationMetadataBuilder<TApiController> DescribeParameter<TParameterType>(String parameterName)
         {
-            return DescribeParameter(parameterName, parameterType, null);
+            return DescribeParameter<TParameterType>(parameterName, null);
         }
 
-        public HttpActionDocumentationMetadataBuilder<TApiController> DescribeParameter(String parameterName, Type parameterType, String description)
+        public HttpActionDocumentationMetadataBuilder<TApiController> DescribeParameter<TParameterType>(String parameterName, String description)
         {
-            if (!_Method.GetParameters().Any(parameter => parameter.Name.Equals(parameterName, StringComparison.OrdinalIgnoreCase) && parameter.ParameterType.Equals(parameterType)))
+            if (!_Method.GetParameters().Any(parameter => parameter.Name.Equals(parameterName, StringComparison.OrdinalIgnoreCase) && parameter.ParameterType.Equals(typeof(TParameterType))))
             {
-                throw new ArgumentException(String.Format("Parameter name: '{0}' with type '{1}' does not exist on method '{2}'.", parameterName, parameterType, _Method.Name));
+                throw new ArgumentException(String.Format("Parameter name: '{0}' with type '{1}' does not exist on method '{2}'.", parameterName, typeof(TParameterType).Name, _Method.Name));
             }
 
             if (_HttpActionParameters.Value.Any(parameter => parameter.Name.Equals(parameterName, StringComparison.OrdinalIgnoreCase)))
@@ -150,27 +150,37 @@
                 throw new InvalidOperationException("You cannot have multiple HTTP action parameters with the same name.");
             }
 
-            _HttpActionParameters.Value.Add(new HttpActionParameterDocumentationMetadata(parameterName, parameterType, description));
+            _HttpActionParameters.Value.Add(new HttpActionParameterDocumentationMetadata(parameterName, typeof(TParameterType), description));
 
             return this;
         }
 
-        public HttpActionDocumentationMetadataBuilder<TApiController> Alert(String alertFormat, params Object[] alertParameters)
+        public HttpActionDocumentationMetadataBuilder<TApiController> Alert(String alert)
         {
-            if (alertFormat == null) return this;
+            if (alert == null) return this;
 
-            _Alert.Value = String.Format(alertFormat, alertParameters).Trim();
+            _Alert.Value = StringHelper.RemoveMultipleSpaces(alert);
 
             return this;
         }
 
-        public HttpActionDocumentationMetadataBuilder<TApiController> Information(String informationFormat, params Object[] informationParameters)
+        public HttpActionDocumentationMetadataBuilder<TApiController> Information(String information)
         {
-            if (informationFormat == null) return this;
+            if (information == null) return this;
 
-            _Information.Value = String.Format(informationFormat, informationParameters).Trim();
+            _Information.Value = StringHelper.RemoveMultipleSpaces(information);
 
             return this;
+        }
+
+        public void Build()
+        {
+            if (!_HttpControllerDocumentationMetadataBuilder.Contains(_Method))
+            {
+                _HttpControllerDocumentationMetadataBuilder.AddDocumentedHttpAction(this);
+                _HttpControllerDocumentationMetadataBuilder.WebApiDocumentationMetadataBuilder
+                                                           .AddDocumentedApiController<TApiController>(_HttpControllerDocumentationMetadataBuilder);
+            }
         }
     }
 }

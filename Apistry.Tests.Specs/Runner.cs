@@ -23,41 +23,10 @@ namespace Apistry.Tests.Specs
 
     class Runner
     {
-        Establish ctx = () =>
+
+        private static void C(WebApiDocumentationMetadataBuilder b)
         {
-            config = new HttpConfiguration();
-            var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost/api/example/5?role=admin")
-            {
-                Content = new StringContent("{ \"FirstName\": \"DGDev\" }")
-            };
-
-            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
-
-            var route = config.Routes.MapHttpRoute("Example", "api/{controller}/{id}");
-            var routeData = new HttpRouteData(route, new HttpRouteValueDictionary { { "controller", "Example" } });
-            _Controller = new ExampleController
-                {
-                    Configuration = config,
-                    ControllerContext = new HttpControllerContext(config, routeData, request)
-                        {
-                            ControllerDescriptor = new HttpControllerDescriptor(config, "ExampleController", typeof(ExampleController))
-                        },
-                    Request = request
-                };
-
-            _Controller.Request.Properties[HttpPropertyKeys.HttpConfigurationKey] = config;
-        };
-
-        Because of = () =>
-        {
-            
-        };
-
-        It should_run_the_test = () =>
-        {
-            WebApiDocumentationMetadata metadata =
-                new WebApiDocumentationMetadataBuilder()
-                    .DocumentDto<User>("System user.")
+            b.DocumentDto<User>("System user.")
                         .For(u => u.Id)
                             .Description("A unique identifier for a user used by the application.")
                             .Example(53)
@@ -106,16 +75,54 @@ namespace Apistry.Tests.Specs
                         .DescribeAction(c => c.PostUser(default(Int32), default(User), default(String)))
                             .Name("Create a new user account.")
                             .Summary(@"This is will create a new user with associated profile information.")
-                            .DescribeParameter("siteId", typeof(Int32), "The tenant identifier.")
-                            .DescribeParameter("user", typeof(User))
-                            .DescribeParameter("role", typeof(String), "The membership role.")
+                            .DescribeParameter<int>("siteId", "The tenant identifier.")
+                            .DescribeParameter<User>("user")
+                            .DescribeParameter<string>("role", "The membership role.")
                             .Returns<User>(HttpStatusCode.Created)
                             .Alert("This endpoint is only accessible by administrators.")
                             .Information("Important information regarding this endpoint.")
-                        .DescribeAction(c => c.PutUser(default(int), default(User)));
+                        .DescribeAction(c => c.PutUser(default(int), default(User)))
+                        .Build();
+        }
+
+        Establish ctx = () =>
+        {
+            config = new HttpConfiguration();
+            var request = new HttpRequestMessage(HttpMethod.Post, "http://localhost/api/example/5?role=admin")
+            {
+                Content = new StringContent("{ \"FirstName\": \"DGDev\" }")
+            };
+
+            request.Content.Headers.ContentType = new MediaTypeHeaderValue("application/json");
+
+            var route = config.Routes.MapHttpRoute("Example", "api/{controller}/{id}");
+            var routeData = new HttpRouteData(route, new HttpRouteValueDictionary { { "controller", "Example" } });
+            _Controller = new ExampleController
+                {
+                    Configuration = config,
+                    ControllerContext = new HttpControllerContext(config, routeData, request)
+                        {
+                            ControllerDescriptor = new HttpControllerDescriptor(config, "ExampleController", typeof(ExampleController))
+                        },
+                    Request = request
+                };
+
+            _Controller.Request.Properties[HttpPropertyKeys.HttpConfigurationKey] = config;
+        };
+
+        Because of = () =>
+        {
+            
+        };
+
+        It should_run_the_test = () =>
+            {
+                var b = new WebApiDocumentationMetadataBuilder();
+                C(b);
+                    
                             
 
-            var provider = new WebApiDocumentationProvider(metadata);
+            var provider = new WebApiDocumentationProvider(b);
 
             var documentation = provider.GetDocumentation(
                 new ReflectedHttpActionDescriptor(

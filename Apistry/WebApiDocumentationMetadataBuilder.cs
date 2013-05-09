@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Text.RegularExpressions;
     using System.Web.Http.Controllers;
 
     public class WebApiDocumentationMetadataBuilder
@@ -38,7 +39,17 @@
                 throw new InvalidOperationException(String.Format("You cannot document the same DTO, '{0}', more than once.", typeof(TDto).Name));
             }
 
-            return new DtoDocumentationMetadataBuilder<TDto>(this, summary);
+            return new DtoDocumentationMetadataBuilder<TDto>(this, Regex.Replace(summary.Trim(), @"\s+", " "));
+        }
+
+        public Boolean Contains(HttpControllerDocumentationMetadata httpControllerDocumentationMetadata)
+        {
+            return _ApiControllerDocumentation.ContainsKey(httpControllerDocumentationMetadata.ApiControllerType);
+        }
+
+        public Boolean Contains(DtoDocumentationMetadata dtoDocumentationMetadata)
+        {
+            return _DtoDocumentation.ContainsKey(dtoDocumentationMetadata.Type);
         }
 
         protected internal void AddDocumentedDto<TDto>(DtoDocumentationMetadata dtoDocumentationMetadata)
