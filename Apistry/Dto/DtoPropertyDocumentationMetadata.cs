@@ -1,8 +1,9 @@
-﻿namespace Apistry
+﻿namespace Apistry.Dto
 {
     using System;
     using System.Collections.Generic;
     using System.ComponentModel;
+    using System.Net.Http;
 
     public class DtoPropertyDocumentationMetadata
     {
@@ -12,14 +13,14 @@
 
         private readonly Object _ExampleValue;
 
-        private readonly IEnumerable<System.Net.Http.HttpMethod> _RequiredForHttpMethods;
+        private readonly IEnumerable<HttpMethod> _ExcludedMethods;
 
-        public DtoPropertyDocumentationMetadata(PropertyDescriptor property, String description, Object exampleValue, IEnumerable<System.Net.Http.HttpMethod> requiredForHttpMethods)
+        public DtoPropertyDocumentationMetadata(PropertyDescriptor property, String description, Object exampleValue, IEnumerable<HttpMethod> excludedMethods)
         {
             _Property = property;
             _Description = description;
             _ExampleValue = exampleValue;
-            _RequiredForHttpMethods = requiredForHttpMethods;
+            _ExcludedMethods = excludedMethods;
         }
 
         public PropertyDescriptor Property
@@ -37,9 +38,9 @@
             get { return _ExampleValue; }
         }
 
-        public IEnumerable<System.Net.Http.HttpMethod> RequiredForHttpMethods
+        public IEnumerable<HttpMethod> ExcludedMethods
         {
-            get { return _RequiredForHttpMethods; }
+            get { return _ExcludedMethods; }
         }
     }
 }

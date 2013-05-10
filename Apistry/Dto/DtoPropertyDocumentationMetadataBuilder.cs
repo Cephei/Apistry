@@ -1,4 +1,4 @@
-﻿namespace Apistry
+﻿namespace Apistry.Dto
 {
     using System;
     using System.Collections.Generic;
@@ -6,8 +6,8 @@
     using System.Linq;
     using System.Linq.Expressions;
     using System.Net.Http;
-    using System.Text.RegularExpressions;
     using System.Web.Http.Controllers;
+    using Apistry.ApiController;
 
     public class DtoPropertyDocumentationMetadataBuilder<TDto, TProperty>
     {
@@ -19,16 +19,16 @@
 
         private readonly Optional<TProperty> _ExampleValue;
 
-        private readonly Optional<ISet<HttpMethod>> _RequiredMethods;
+        private readonly Optional<ISet<HttpMethod>> _ExcludedMethods;
 
         public DtoPropertyDocumentationMetadataBuilder(DtoDocumentationMetadataBuilder<TDto> dtoDocumentationMetadataBuilder, PropertyDescriptor property)
         {
             _DtoDocumentationMetadataBuilder = dtoDocumentationMetadataBuilder;
             _Property = property;
 
-            _Description = new Optional<string>(String.Empty);
+            _Description = new Optional<String>(String.Empty);
             _ExampleValue = new Optional<TProperty>(default(TProperty));
-            _RequiredMethods = new Optional<ISet<HttpMethod>>(null);
+            _ExcludedMethods = new Optional<ISet<HttpMethod>>(new HashSet<HttpMethod>());
         }
 
         public static implicit operator WebApiDocumentationMetadata(DtoPropertyDocumentationMetadataBuilder<TDto, TProperty> builder)
@@ -45,7 +45,7 @@
                 builder._Property,
                 builder._Description.Value,
                 builder._ExampleValue.Value,
-                builder._RequiredMethods.Value);
+                builder._ExcludedMethods.Value);
         }
 
         public HttpControllerDocumentationMetadataBuilder<TApiController> DocumentController<TApiController>() where TApiController : IHttpController
@@ -82,21 +82,14 @@
             return this;
         }
 
-        public DtoPropertyDocumentationMetadataBuilder<TDto, TProperty> IsRequired(params HttpMethod[] httpMethods)
+        public DtoPropertyDocumentationMetadataBuilder<TDto, TProperty> ExcludeFrom(params HttpMethod[] httpMethods)
         {
-            if (httpMethods == null)
+            if (httpMethods == null || !httpMethods.Any())
             {
-                _RequiredMethods.Value = null;
                 return this;
             }
 
-            if (!httpMethods.Any())
-            {
-                _RequiredMethods.Value = new HashSet<HttpMethod>();
-                return this;
-            }
-
-            _RequiredMethods.Value = new HashSet<HttpMethod>(httpMethods);
+            _ExcludedMethods.Value = new HashSet<HttpMethod>(httpMethods);
             return this;
         }
 

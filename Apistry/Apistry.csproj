@@ -62,21 +62,23 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="ApiActionDescription.cs" />
-    <Compile Include="DtoDocumentationMetadata.cs" />
-    <Compile Include="DtoDocumentationMetadataBuilder.cs" />
-    <Compile Include="DtoPropertyDocumentationMetadata.cs" />
-    <Compile Include="DtoPropertyDocumentationMetadataBuilder.cs" />
-    <Compile Include="HttpActionDocumentation.cs" />
-    <Compile Include="HttpActionDocumentationMetadata.cs" />
-    <Compile Include="HttpActionDocumentationMetadataBuilder.cs" />
-    <Compile Include="HttpActionParameterDocumentationMetadata.cs" />
-    <Compile Include="HttpActionRequestDocumentation.cs" />
-    <Compile Include="HttpActionRequestParameterDocumentation.cs" />
-    <Compile Include="HttpActionResponseDocumentation.cs" />
-    <Compile Include="HttpActionResponseDocumentationMetadata.cs" />
-    <Compile Include="HttpControllerDocumentation.cs" />
-    <Compile Include="HttpControllerDocumentationMetadata.cs" />
-    <Compile Include="HttpControllerDocumentationMetadataBuilder.cs" />
+    <Compile Include="ApistrySettings.cs" />
+    <Compile Include="Conventions\IRequestBuilderConvention.cs" />
+    <Compile Include="Dto\DtoDocumentationMetadata.cs" />
+    <Compile Include="Dto\DtoDocumentationMetadataBuilder.cs" />
+    <Compile Include="Dto\DtoPropertyDocumentationMetadata.cs" />
+    <Compile Include="Dto\DtoPropertyDocumentationMetadataBuilder.cs" />
+    <Compile Include="ApiController\HttpActionDocumentation.cs" />
+    <Compile Include="ApiController\HttpActionDocumentationMetadata.cs" />
+    <Compile Include="ApiController\HttpActionDocumentationMetadataBuilder.cs" />
+    <Compile Include="ApiController\HttpActionParameterDocumentationMetadata.cs" />
+    <Compile Include="ApiController\HttpActionRequestDocumentation.cs" />
+    <Compile Include="ApiController\HttpActionRequestParameterDocumentation.cs" />
+    <Compile Include="ApiController\HttpActionResponseDocumentation.cs" />
+    <Compile Include="ApiController\HttpActionResponseDocumentationMetadata.cs" />
+    <Compile Include="ApiController\HttpControllerDocumentation.cs" />
+    <Compile Include="ApiController\HttpControllerDocumentationMetadata.cs" />
+    <Compile Include="ApiController\HttpControllerDocumentationMetadataBuilder.cs" />
     <Compile Include="HydratorAdapter.cs" />
     <Compile Include="ICollectionExtensions.cs" />
     <Compile Include="ObjectHydratorCustomization.cs" />
@@ -93,6 +95,7 @@
     <None Include="app.config" />
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

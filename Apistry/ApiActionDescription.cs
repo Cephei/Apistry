@@ -1,5 +1,6 @@
 ﻿namespace Apistry
 {
+    using System;
     using System.Collections.ObjectModel;
     using System.Net.Http;
     using System.Net.Http.Formatting;
@@ -7,6 +8,7 @@
     using System.Web.Http.Controllers;
     using System.Web.Http.Description;
     using System.Web.Http.Routing;
+    using Apistry.ApiController;
 
     public class ApiActionDescription
     {
@@ -35,7 +37,7 @@
         /// <value>
         /// The relative path.
         /// </value>
-        public string RelativePath
+        public String RelativePath
         {
             get { return _ApiDescription.RelativePath; }
         }
@@ -86,7 +88,7 @@
         /// <summary>
         /// Gets the ID. The ID is unique within <see cref="HttpServer"/>.
         /// </summary>
-        public string ID
+        public String ID
         {
             get { return _ApiDescription.ID; }
         }

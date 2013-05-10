@@ -16,10 +16,12 @@ namespace Apistry.Tests.Specs
     using System.Web.Http.Controllers;
     using System.Web.Http.Hosting;
     using System.Web.Http.Routing;
+    using Apistry.ApiController;
     using Machine.Specifications;
     using Newtonsoft.Json;
     using Newtonsoft.Json.Linq;
     using Polenter.Serialization;
+
 
     class Runner
     {
@@ -30,38 +32,29 @@ namespace Apistry.Tests.Specs
                         .For(u => u.Id)
                             .Description("A unique identifier for a user used by the application.")
                             .Example(53)
-                            .IsRequired(HttpMethod.Put)
                         .For(u => u.FirstName)
                             .Description("A user's first name.")
                             .Example("Daniel")
-                            .IsRequired(HttpMethod.Post, HttpMethod.Put)
                         .For(u => u.LastName)
                             .Description("A user's last name.")
                             .Example("Gioulakis")
-                            .IsRequired(HttpMethod.Post, HttpMethod.Put)
                         .For(u => u.Address)
-                            .IsRequired(HttpMethod.Post)
                     .DocumentDto<Address>("A user's address.")
                         .For(a => a.AddressLine1)
                             .Description("The street number.")
                             .Example("150 E Robinson St")
-                            .IsRequired(HttpMethod.Post, HttpMethod.Put)
                         .For(a => a.City)
                             .Description("The city name.")
                             .Example("Orlando")
-                            .IsRequired(HttpMethod.Post, HttpMethod.Put)
                         .For(a => a.State)
                             .Description("The state.")
                             .Example("Florida")
-                            .IsRequired(HttpMethod.Post, HttpMethod.Put)
                         .For(a => a.ZipCode)
                             .Description("The zip code.")
                             .Example("32801")
-                            .IsRequired(HttpMethod.Post, HttpMethod.Put)
                         .For(a => a.Country)
                             .Description("The country.")
                             .Example("United States")
-                            .IsRequired(HttpMethod.Post, HttpMethod.Put)
                     .DocumentDto<Profile>("A user's profile.")
                         .For(p => p.About)
                             .Description("About user profile section.")

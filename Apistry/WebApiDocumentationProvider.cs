@@ -13,7 +13,8 @@
     using System.Web.Http;
     using System.Web.Http.Controllers;
     using System.Web.Http.Description;
-
+    using Apistry.ApiController;
+    using Apistry.Dto;
     using Newtonsoft.Json;
 
     using Ploeh.AutoFixture;
@@ -217,11 +218,19 @@
                     requestBodyExample[dtoProperty.Property.Name] = 
                         CreateRequestBodyExample(httpActionDescriptor, _WebApiDocumentationMetadata.DtoDocumentation[dtoProperty.Property.PropertyType]);
                 }
-                else if (dtoProperty.ExampleValue != null && 
-                         httpActionDescriptor.SupportedHttpMethods
-                                                      .Intersect(dtoProperty.RequiredForHttpMethods ?? Enumerable.Empty<HttpMethod>()).Any())
+                else if (!httpActionDescriptor.SupportedHttpMethods.Intersect(dtoProperty.ExcludedMethods ?? Enumerable.Empty<HttpMethod>()).Any())
                 {
-                    requestBodyExample[dtoProperty.Property.Name] = dtoProperty.ExampleValue;
+                    if (_WebApiDocumentationMetadata.Settings
+                        .RequestBuilderConventions
+                        .Any(c => !c.IncludeProperty(
+                            httpActionDescriptor.SupportedHttpMethods, 
+                            dtoDocumentationMetadata.Type.GetProperty(dtoProperty.Property.Name), 
+                            dtoDocumentationMetadata.Type)))
+                    {
+                        continue;
+                    }
+
+                    requestBodyExample[dtoProperty.Property.Name] = GetOrCreateExampleValue(dtoDocumentationMetadata, dtoProperty.Property);
                 }
             }
 
@@ -507,6 +516,13 @@
                 }
                 else
                 {
+                    if (_WebApiDocumentationMetadata.Settings
+                            .RequestBuilderConventions
+                            .Any(c => !c.IncludeProperty(httpActionDescriptor.SupportedHttpMethods, dtoProperty, dto)))
+                    {
+                        continue;
+                    }
+
                     requestBodyExample[dtoProperty.Name] = GetOrCreateExampleValue(dtoProperty.PropertyType);
                 }
             }

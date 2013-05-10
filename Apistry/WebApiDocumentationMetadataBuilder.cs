@@ -4,22 +4,29 @@
     using System.Collections.Generic;
     using System.Text.RegularExpressions;
     using System.Web.Http.Controllers;
+    using Apistry.ApiController;
+    using Apistry.Dto;
 
     public class WebApiDocumentationMetadataBuilder
     {
+        private readonly ApistrySettings _ApistrySettings;
         private readonly IDictionary<Type, DtoDocumentationMetadata> _DtoDocumentation;
-
         private readonly IDictionary<Type, HttpControllerDocumentationMetadata> _ApiControllerDocumentation;
 
-        public WebApiDocumentationMetadataBuilder()
+        public WebApiDocumentationMetadataBuilder() : this(null)
         {
+        }
+
+        public WebApiDocumentationMetadataBuilder(ApistrySettings apistrySettings)
+        {
+            _ApistrySettings = apistrySettings;
             _DtoDocumentation = new Dictionary<Type, DtoDocumentationMetadata>();
             _ApiControllerDocumentation = new Dictionary<Type, HttpControllerDocumentationMetadata>();
         }
 
         public static implicit operator WebApiDocumentationMetadata(WebApiDocumentationMetadataBuilder metadataBuilder)
         {
-            return new WebApiDocumentationMetadata(metadataBuilder._DtoDocumentation, metadataBuilder._ApiControllerDocumentation);
+            return new WebApiDocumentationMetadata(metadataBuilder._ApistrySettings, metadataBuilder._DtoDocumentation, metadataBuilder._ApiControllerDocumentation);
         }
 
         public HttpControllerDocumentationMetadataBuilder<TApiController> DocumentController<TApiController>() where TApiController : IHttpController

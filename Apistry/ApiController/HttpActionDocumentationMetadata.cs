@@ -1,4 +1,4 @@
-﻿namespace Apistry
+﻿namespace Apistry.ApiController
 {
     using System;
     using System.Collections.Generic;

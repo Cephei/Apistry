@@ -1,4 +1,4 @@
-﻿namespace Apistry
+﻿namespace Apistry.Dto
 {
     using System;
     using System.Collections.Generic;
@@ -10,7 +10,7 @@
     {
         private readonly WebApiDocumentationMetadataBuilder _WebApiDocumentationMetadataBuilder;
 
-        private readonly Optional<string> _Summary;
+        private readonly Optional<String> _Summary;
 
         private readonly ISet<DtoPropertyDocumentationMetadata> _PropertyDocumentation;
 

@@ -1,4 +1,4 @@
-﻿namespace Apistry
+﻿namespace Apistry.ApiController
 {
     using System;
     using System.Collections.Generic;
@@ -7,6 +7,7 @@
     using System.Net;
     using System.Reflection;
     using System.Web.Http.Controllers;
+    using Apistry.Dto;
 
     public class HttpActionDocumentationMetadataBuilder<TApiController> where TApiController : IHttpController
     {

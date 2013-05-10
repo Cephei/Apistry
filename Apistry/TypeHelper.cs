@@ -24,7 +24,6 @@ namespace Apistry
     using System.ComponentModel;
     using System.Diagnostics.Contracts;
     using System.Threading.Tasks;
-    using System.Web.Http;
 
     /// <summary>
     /// A static class that provides various <see cref="Type"/> related helpers.
@@ -33,7 +32,7 @@ namespace Apistry
     {
         private static readonly Type TaskGenericType = typeof(Task<>);
 
-        internal static readonly Type ApiControllerType = typeof(ApiController);
+        internal static readonly Type ApiControllerType = typeof(System.Web.Http.ApiController);
 
         internal static Type GetTaskInnerTypeOrNull(Type type)
         {

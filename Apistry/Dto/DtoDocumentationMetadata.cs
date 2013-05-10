@@ -1,4 +1,4 @@
-﻿namespace Apistry
+﻿namespace Apistry.Dto
 {
     using System;
     using System.Collections.Generic;
