@@ -7,6 +7,6 @@
 
     public interface IRequestBuilderConvention
     {
-        bool IncludeProperty(IEnumerable<HttpMethod> httpMethods, PropertyInfo propertyInfo, Type parentObjectType);
+        Boolean IncludeProperty(IEnumerable<HttpMethod> httpMethods, PropertyInfo propertyInfo, Type parentObjectType);
     }
 }

@@ -1,15 +1,15 @@
-﻿using System;
-using System.Net;
-using System.Net.Http;
-using System.Web.Http;
-
+﻿
 namespace Apistry.Samples.Web.Controllers
 {
+    using System;
+    using System.Net;
+    using System.Net.Http;
+    using System.Web.Http;
     using Apistry.Samples.Web.Models;
 
     public class UserController : ApiController
     {
-        public void Post([FromBody]User user)
+        public void Post(User user)
         {
         }
 
