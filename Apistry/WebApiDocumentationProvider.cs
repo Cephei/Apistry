@@ -4,12 +4,14 @@
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Dynamic;
+    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Net;
     using System.Net.Http;
     using System.Reflection;
     using System.Runtime.Serialization;
+    using System.Threading;
     using System.Web.Http;
     using System.Web.Http.Controllers;
     using System.Web.Http.Description;
@@ -24,25 +26,25 @@
     {
         private readonly WebApiDocumentationMetadata _WebApiDocumentationMetadata;
         private readonly JsonSerializer _JsonSerializer;
-        private readonly Lazy<IFixture> _Fixture = new Lazy<IFixture>(() =>
-            {
-                var fixture = new Fixture().Customize(new CompositeCustomization(new ObjectHydratorCustomization()));
-                fixture.Behaviors.Remove(new ThrowingRecursionBehavior());
-                fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+        private static volatile Lazy<IFixture> _Fixture = new Lazy<IFixture>(() =>
+        {
+            var fixture = new Fixture().Customize(new CompositeCustomization(new ObjectHydratorCustomization()));
+            fixture.Behaviors.Remove(new ThrowingRecursionBehavior());
+            fixture.Behaviors.Add(new OmitOnRecursionBehavior());
 
-                return fixture;
-            });
+            return fixture;
+        }, LazyThreadSafetyMode.ExecutionAndPublication);
 
         public WebApiDocumentationProvider(WebApiDocumentationMetadata webApiDocumentationMetadata)
         {
             _WebApiDocumentationMetadata = webApiDocumentationMetadata;
             _JsonSerializer = JsonSerializer.Create(
                 new JsonSerializerSettings
-                    {
-                        Formatting = Formatting.None
-                    });
+                {
+                    Formatting = Formatting.None
+                });
         }
-        
+
         public HttpActionDocumentation GetHttpActionDocumentation(HttpActionDescriptor httpActionDescriptor)
         {
             var reflectedActionDescriptor = (ReflectedHttpActionDescriptor)httpActionDescriptor;
@@ -80,7 +82,7 @@
             var actionRequestDocumentation = CreateHttpActionRequestDocumentation(reflectedActionDescriptor, actionDocumentationMetadata);
             var actionResponseDocumentation = CreateHttpActionResponseDocumentation(actionDocumentationMetadata);
 
-            return 
+            return
                 new HttpActionDocumentation(controllerDocumentation,
                                             actionDocumentationMetadata.Name,
                                             actionDocumentationMetadata.Summary,
@@ -92,8 +94,9 @@
 
         public String GetDocumentation(HttpActionDescriptor httpActionDescriptor)
         {
+            return null;
             var actionDocumentation = GetHttpActionDocumentation(httpActionDescriptor);
-            
+
             using (var stringWriter = new StringWriter())
             using (var jsonTextWriter = new JsonTextWriter(stringWriter))
             {
@@ -180,10 +183,10 @@
 
         private Object CreateHttpActionRequestBody(HttpActionDescriptor httpActionDescriptor)
         {
-            var formatterParameterBinding = 
+            var formatterParameterBinding =
                 httpActionDescriptor.ActionBinding
                                     .ParameterBindings
-                                    .SingleOrDefault(binding => !binding.Descriptor.IsOptional && 
+                                    .SingleOrDefault(binding => !binding.Descriptor.IsOptional &&
                                                                 !TypeHelper.CanConvertFromString(binding.Descriptor.ParameterType) &&
                                                                 binding.WillReadBody);
 
@@ -209,13 +212,16 @@
 
         private IDictionary<String, Object> CreateRequestBodyExample(HttpActionDescriptor httpActionDescriptor, DtoDocumentationMetadata dtoDocumentationMetadata)
         {
+            // Create an example DTO based off AutoFixture / ObjectHydrator conventions to be used as reference if properties aren't documented.
+            var exampleObject = CreateInstanceOfType(dtoDocumentationMetadata.Type);
+
             IDictionary<String, Object> requestBodyExample = new ExpandoObject();
             foreach (DtoPropertyDocumentationMetadata dtoProperty in dtoDocumentationMetadata.PropertyDocumentationMetadata)
             {
                 if (!TypeHelper.CanConvertFromString(dtoProperty.Property.PropertyType) &&
                     _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(dtoProperty.Property.PropertyType))
                 {
-                    requestBodyExample[dtoProperty.Property.Name] = 
+                    requestBodyExample[dtoProperty.Property.Name] =
                         CreateRequestBodyExample(httpActionDescriptor, _WebApiDocumentationMetadata.DtoDocumentation[dtoProperty.Property.PropertyType]);
                 }
                 else if (!httpActionDescriptor.SupportedHttpMethods.Intersect(dtoProperty.ExcludedMethods ?? Enumerable.Empty<HttpMethod>()).Any())
@@ -223,14 +229,25 @@
                     if (_WebApiDocumentationMetadata.Settings
                         .RequestBuilderConventions
                         .Any(c => !c.IncludeProperty(
-                            httpActionDescriptor.SupportedHttpMethods, 
-                            dtoDocumentationMetadata.Type.GetProperty(dtoProperty.Property.Name), 
+                            httpActionDescriptor.SupportedHttpMethods,
+                            dtoDocumentationMetadata.Type.GetProperty(dtoProperty.Property.Name),
                             dtoDocumentationMetadata.Type)))
                     {
                         continue;
                     }
 
-                    requestBodyExample[dtoProperty.Property.Name] = GetOrCreateExampleValue(dtoDocumentationMetadata, dtoProperty.Property);
+                    var propertyDocumentationMetadata =
+                    dtoDocumentationMetadata.PropertyDocumentationMetadata
+                                            .SingleOrDefault(pdm => pdm.Property.Equals(dtoProperty.Property) && pdm.ExampleValue != null);
+
+                    if (propertyDocumentationMetadata != null)
+                    {
+                        requestBodyExample[dtoProperty.Property.Name] = propertyDocumentationMetadata.ExampleValue;
+                    }
+                    else
+                    {
+                        requestBodyExample[dtoProperty.Property.Name] = dtoProperty.Property.GetValue(exampleObject);
+                    }
                 }
             }
 
@@ -256,7 +273,7 @@
             if (responseType != null && _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(responseType))
             {
                 DtoDocumentationMetadata dtoDocumentationMetadata = _WebApiDocumentationMetadata.DtoDocumentation[responseType];
-                
+
                 // Set the summary which describes the data returned by the HTTP action.
                 responseSummary = responseSummary ?? dtoDocumentationMetadata.Summary;
 
@@ -268,9 +285,9 @@
             }
 
             return new HttpActionResponseDocumentation(
-                responseSummary, 
-                statusCode, 
-                documentedProperties ?? Enumerable.Empty<PropertyDocumentation>(), 
+                responseSummary,
+                statusCode,
+                documentedProperties ?? Enumerable.Empty<PropertyDocumentation>(),
                 responseExample);
         }
 
@@ -293,11 +310,11 @@
 
             foreach (var propertyDescriptor in propertyDescriptors)
             {
-                var documentedProperty = 
+                var documentedProperty =
                     dtoDocumentationMetadata.PropertyDocumentationMetadata
                                             .SingleOrDefault(
-                                                metadata => 
-                                                metadata.Property.Name.Equals(propertyDescriptor.Name) && 
+                                                metadata =>
+                                                metadata.Property.Name.Equals(propertyDescriptor.Name) &&
                                                 metadata.Property.PropertyType.Equals(propertyDescriptor.PropertyType));
 
                 if (!TypeHelper.CanConvertFromString(propertyDescriptor.PropertyType) &&
@@ -375,7 +392,7 @@
                 {
                     return String.Format("{0} (list)", propertyDescriptor.PropertyType.GetGenericArguments().Single().Name);
                 }
-                
+
                 if (propertyDescriptor.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
                     return String.Format("{0} (nullable)", propertyDescriptor.PropertyType.GetGenericArguments().Single().Name);
@@ -422,6 +439,9 @@
 
         private Object CreateResponseContentExample(DtoDocumentationMetadata dtoDocumentationMetadata)
         {
+            // Create an example DTO based off AutoFixture / ObjectHydrator conventions to be used as reference if properties aren't documented.
+            var exampleObject = CreateInstanceOfType(dtoDocumentationMetadata.Type);
+
             IDictionary<String, Object> responseExample = new ExpandoObject();
             var propertyDescriptors = TypeDescriptor.GetProperties(dtoDocumentationMetadata.Type);
             var dtoProperties =
@@ -436,49 +456,35 @@
 
             foreach (var propertyDescriptor in dtoProperties)
             {
-                if (!TypeHelper.CanConvertFromString(propertyDescriptor.PropertyType))
+                if (!TypeHelper.CanConvertFromString(propertyDescriptor.PropertyType) &&
+                    _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(propertyDescriptor.PropertyType))
                 {
-                    if (_WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(propertyDescriptor.PropertyType))
-                    {
-                        responseExample[propertyDescriptor.Name] =
-                            CreateResponseContentExample(_WebApiDocumentationMetadata.DtoDocumentation[propertyDescriptor.PropertyType]);
-                    }
-                    else
-                    {
-                        responseExample[propertyDescriptor.Name] = GetOrCreateExampleValue(null, propertyDescriptor);
-                    }
+                    responseExample[propertyDescriptor.Name] =
+                        CreateResponseContentExample(_WebApiDocumentationMetadata.DtoDocumentation[propertyDescriptor.PropertyType]);
                 }
                 else
                 {
-                    responseExample[propertyDescriptor.Name] = GetOrCreateExampleValue(dtoDocumentationMetadata, propertyDescriptor);
+                    responseExample[propertyDescriptor.Name] = propertyDescriptor.GetValue(exampleObject);
                 }
             }
 
             return responseExample;
         }
 
-        private Object GetOrCreateExampleValue(DtoDocumentationMetadata dtoDocumentationMetadata, PropertyDescriptor propertyDescriptor)
-        {
-            if (dtoDocumentationMetadata != null)
-            {
-                var propertyDocumentationMetadata =
-                    dtoDocumentationMetadata.PropertyDocumentationMetadata
-                                            .SingleOrDefault(pdm => pdm.Property.Equals(propertyDescriptor) && pdm.ExampleValue != null);
-
-                if (propertyDocumentationMetadata != null)
-                {
-                    return propertyDocumentationMetadata.ExampleValue;
-                }
-            }
-
-            return GetOrCreateExampleValue(propertyDescriptor.PropertyType);
-        }
-
-        private Object GetOrCreateExampleValue(Type type)
+        private Object CreateInstanceOfType(Type type)
         {
             try
             {
-                return _Fixture.Value.Create(type, new SpecimenContext(_Fixture.Value));
+                var fixture = new Fixture().Customize(new CompositeCustomization(new ObjectHydratorCustomization()));
+                fixture.Behaviors.Remove(new ThrowingRecursionBehavior());
+                fixture.Behaviors.Add(new OmitOnRecursionBehavior());
+
+                return fixture.Create(type, new SpecimenContext(fixture));
+
+                // We encounter race conditions with AutoFixture when using a field below.
+
+                // var fixture = _Fixture.Value;
+                // return fixture.Create(type, new SpecimenContext(fixture));
             }
             catch
             {
@@ -505,6 +511,9 @@
 
         private IDictionary<String, Object> CreateDefaultRequestBodyExample(HttpActionDescriptor httpActionDescriptor, Type dto)
         {
+            // Create an example DTO based off AutoFixture / ObjectHydrator conventions to be used as reference if properties aren't documented.
+            var exampleObject = CreateInstanceOfType(dto);
+
             IDictionary<String, Object> requestBodyExample = new ExpandoObject();
             foreach (var dtoProperty in dto.GetProperties())
             {
@@ -523,7 +532,7 @@
                         continue;
                     }
 
-                    requestBodyExample[dtoProperty.Name] = GetOrCreateExampleValue(dtoProperty.PropertyType);
+                    requestBodyExample[dtoProperty.Name] = dtoProperty.GetValue(exampleObject, BindingFlags.Instance | BindingFlags.Public, null, null, CultureInfo.CurrentCulture);
                 }
             }
 
@@ -532,6 +541,9 @@
 
         private HttpActionResponseDocumentation CreateDefaultResponseDocumentation(HttpActionDescriptor actionDescriptor)
         {
+            // This will eventually be used to reflect the action descriptor and determine
+            // if a response can be generated based upon the return type of the method.
+
             return new HttpActionResponseDocumentation(
                 String.Empty,
                 HttpStatusCode.OK,
