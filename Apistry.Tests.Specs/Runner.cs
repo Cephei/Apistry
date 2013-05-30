@@ -39,10 +39,16 @@ namespace Apistry.Tests.Specs
                             .Description("A user's last name.")
                             .Example("Gioulakis")
                         .For(u => u.Address)
+                            .Description("sadf")
+                        .For(u => u.Friends)
+                            .Description("sadf")
                     .DocumentDto<Address>("A user's address.")
                         .For(a => a.AddressLine1)
                             .Description("The street number.")
                             .Example("150 E Robinson St")
+                        .For(a => a.AddressLine2)
+                            .Description("sadf")
+                            .Example("asdf")
                         .For(a => a.City)
                             .Description("The city name.")
                             .Example("Orlando")
@@ -117,15 +123,11 @@ namespace Apistry.Tests.Specs
 
             var provider = new WebApiDocumentationProvider(b);
 
-            var documentation = provider.GetDocumentation(
+            var documentation = provider.GetHttpActionDocumentation(
                 new ReflectedHttpActionDescriptor(
                     _Controller.ControllerContext.ControllerDescriptor,
                     _Controller.ControllerContext.ControllerDescriptor.ControllerType.GetMethod("PostUser", BindingFlags.Instance | BindingFlags.Public)));
 
-            var docs =
-                JsonSerializer.Create(new JsonSerializerSettings())
-                              .Deserialize<HttpActionDocumentation>(
-                                  new JsonTextReader(new StringReader(documentation)));
             
             var pDoc = provider.GetDocumentation(
                 new ReflectedHttpParameterDescriptor(

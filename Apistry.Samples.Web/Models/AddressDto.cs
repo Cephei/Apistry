@@ -2,7 +2,7 @@
 {
     using System;
 
-    public class Address
+    public class AddressDto
     {
         public String AddressLine1 { get; set; }
 

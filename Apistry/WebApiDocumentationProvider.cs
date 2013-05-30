@@ -64,6 +64,11 @@
                 .ApiControllerDocumentation
                 .SingleOrDefault(controller => controller.Key.Equals(httpActionDescriptor.ControllerDescriptor.ControllerType))
                 .Value;
+            
+            var controllerDocumentation = new HttpControllerDocumentation(
+                controllerDocumentationMetadata.ApiControllerType,
+                controllerDocumentationMetadata.ResourceName,
+                controllerDocumentationMetadata.Summary);
 
             var actionDocumentationMetadata = controllerDocumentationMetadata
                 .HttpActionDocumentationMetadata
@@ -71,13 +76,15 @@
 
             if (actionDocumentationMetadata == null)
             {
-                return null;
+                return new HttpActionDocumentation(
+                    controllerDocumentation,
+                    reflectedActionDescriptor.ActionName,
+                    String.Empty,
+                    String.Empty,
+                    String.Empty,
+                    CreateDefaultRequestDocumentation(reflectedActionDescriptor),
+                    CreateDefaultResponseDocumentation(reflectedActionDescriptor));
             }
-
-            var controllerDocumentation = new HttpControllerDocumentation(
-                controllerDocumentationMetadata.ApiControllerType,
-                controllerDocumentationMetadata.ResourceName,
-                controllerDocumentationMetadata.Summary);
 
             var actionRequestDocumentation = CreateHttpActionRequestDocumentation(reflectedActionDescriptor, actionDocumentationMetadata);
             var actionResponseDocumentation = CreateHttpActionResponseDocumentation(actionDocumentationMetadata);
@@ -333,7 +340,8 @@
                 }
                 else if (!TypeHelper.CanConvertFromString(propertyDescriptor.PropertyType) &&
                          GetEnumerableType(propertyDescriptor.PropertyType) != null &&
-                         _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(propertyDescriptor.PropertyType.GetGenericArguments().First()))
+                         (propertyDescriptor.PropertyType.IsGenericType && 
+                          _WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(propertyDescriptor.PropertyType.GetGenericArguments().First())))
                 {
                     var genericPropertyType = propertyDescriptor.PropertyType.GetGenericArguments().First();
 

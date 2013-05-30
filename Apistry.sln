@@ -11,9 +11,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{A1931C
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{24E3A6EA-8C6E-47DE-9496-FEA583AA6BFA}"
 	ProjectSection(SolutionItems) = preProject
+		.nuget\Apistry.nuspec = .nuget\Apistry.nuspec
 		.nuget\NuGet.Config = .nuget\NuGet.Config
 		.nuget\NuGet.exe = .nuget\NuGet.exe
 		.nuget\NuGet.targets = .nuget\NuGet.targets
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".build", ".build", "{7453F8E7-51F8-4E82-9E3C-CC943C65262D}"
+	ProjectSection(SolutionItems) = preProject
+		.build\apistry.versioning.targets = .build\apistry.versioning.targets
+		.build\continuousdeployment.build = .build\continuousdeployment.build
 	EndProjectSection
 EndProject
 Global

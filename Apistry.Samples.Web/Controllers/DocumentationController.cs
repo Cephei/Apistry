@@ -13,20 +13,6 @@ namespace Apistry.Samples.Web.Controllers
 
     public class DocumentationController : Controller
     {
-        private static readonly Lazy<JsonSerializer> _JsonSerializer =
-            new Lazy<JsonSerializer>(
-                () => JsonSerializer.Create(
-                    new JsonSerializerSettings
-                        {
-                            Formatting = Formatting.None
-                        }));
-
-        public static JsonSerializer JsonSerializer
-        {
-            get { return _JsonSerializer.Value; }
-        }
-
-
         public ActionResult Index()
         {
             var docProvider = (WebApiDocumentationProvider)GlobalConfiguration.Configuration.Services.GetDocumentationProvider();
@@ -35,11 +21,10 @@ namespace Apistry.Samples.Web.Controllers
 
             var apiActionDescriptions = apiExplorer.ApiDescriptions
                 .AsParallel()
-                .WithDegreeOfParallelism(Environment.ProcessorCount)
+                .WithDegreeOfParallelism(1)
                 .Select(description => CreateApiActionDescription(description, docProvider))
-                .Where(description => description.Documentation != null)
                 .ToList();
-            
+
             return View(apiActionDescriptions);
         }
 

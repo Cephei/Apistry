@@ -5,7 +5,7 @@ using System.Web;
 
 namespace Apistry.Samples.Web.Models
 {
-    public class User
+    public class UserDto
     {
         public Int32 Id { get; set; }
 
@@ -13,10 +13,10 @@ namespace Apistry.Samples.Web.Models
 
         public String LastName { get; set; }
 
-        public Address Address { get; set; }
+        public AddressDto Address { get; set; }
 
-        public Profile Profile { get; set; }
+        public ProfileDto Profile { get; set; }
 
-        public IEnumerable<User> Friends { get; set; }
+        public IEnumerable<UserDto> Friends { get; set; }
     }
 }

@@ -2,7 +2,7 @@
 {
     using System;
 
-    public class Profile
+    public class ProfileDto
     {
         public Byte[] Picture { get; set; }
 

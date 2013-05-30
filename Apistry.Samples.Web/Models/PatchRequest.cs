@@ -12,11 +12,7 @@ namespace Apistry.Samples.Web.Models
     /// <summary>
     /// Defines a transfer object for HTTP PATCH support.
     /// </summary>
-    public class PatchRequest
+    public class PatchRequest<TDto> : Dictionary<String, Object>
     {
-        /// <summary>
-        /// Gets or sets the properties to patch with the specified values.
-        /// </summary>
-        public Dictionary<String, Object> SetParameters { get; set; }
     }
 }

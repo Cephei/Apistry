@@ -1,0 +1,26 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  
+  <PropertyGroup>
+    <ApistryMajorVersion>1</ApistryMajorVersion>
+    <ApistryMinorVersion>0</ApistryMinorVersion>
+    <ApistryPatchVersion>0</ApistryPatchVersion>
+    <BuildNumber>$(BUILD_NUMBER)</BuildNumber> <!-- TeamCity Build -->
+    <BuildVcsNumber>$(BUILD_VCS_NUMBER)</BuildVcsNumber> <!-- Git SHA -->
+    <AssemblyInfoFile>$(MSBuildProjectDirectory)\..\AssemblyInfoShared.cs</AssemblyInfoFile>
+    <AssemblyVersion>$(ApistryMajorVersion).$(ApistryMinorVersion).$(ApistryPatchVersion)</AssemblyVersion>
+    
+    <TeamCityBuildNumber>$(AssemblyVersion)-$(TeamCityBuildConfiguration)+$(BuildNumber).sha.$(BuildVcsNumber)</TeamCityBuildNumber>
+
+    <NuGetPackageVersion Condition=" $(TeamCityBuildConfiguration) == 'build' ">$(AssemblyVersion)-build$(BuildNumber)</NuGetPackageVersion>
+    <NuGetPackageVersion Condition=" $(TeamCityBuildConfiguration) == 'alpha' ">$(AssemblyVersion)-alpha$(BuildNumber)</NuGetPackageVersion>
+    <NuGetPackageVersion Condition=" $(TeamCityBuildConfiguration) == 'release' ">$(AssemblyVersion)</NuGetPackageVersion>
+  </PropertyGroup>
+  
+
+  <!-- Set TeamCity Build Number -->
+  <Target Name="SetTeamCityParameters" BeforeTargets="Compile">
+    <Message Text="##teamcity[buildNumber '$(TeamCityBuildNumber)']" />
+    <Message Text="##teamcity[setParameter name='NuGetPackageVersion' value='$(NuGetPackageVersion)']" />
+  </Target>
+  
+</Project>
