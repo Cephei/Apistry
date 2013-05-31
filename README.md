@@ -87,11 +87,26 @@ WebApiDocumentationMetadata metadata =
 ```
 
 Sample UI Generated Documentation
--------------------------------------------------------
-![](http://apistry.wakingventure.com/ApistryExample.png "Example UI Mashup of Box.com and Google+ APIs")
+---------------------------------
+![](http://apistry.wakingventure.com/ApistryExample.png "Example UI Mashup of Box.com and Google+ APIs")  
+
+
+Roadmap
+=======
+- [x] add support convention-based extensibility for request & reponse properties
+- [ ] refactor initial version codebase for maintainability
+- [ ] refactor documentation provider to support overriding of default behavior
+- [ ] fix lingering bugs
+- [ ] fix rendering of IEnumerable<> request & response examples (currently generates example as single)
+- release v1.0.0
+- [ ] add support for required & optional headers for both request & response
+- release v1.1.x
+- [ ] add Apistry UI - Unique MVC view and template
+- release v1.2.x
+- [ ] add support for a TryItNow feature (in-browser client api explorer)
 
 Continuous Delivery
--------------------
+===================
 Current efforts are underway to bring Apistry to a production-ready state. This 
 includes specification tests and an efficient build and deployment strategy.  To 
 accomplish this, I have set up the following environments for the community to use:
