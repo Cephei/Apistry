@@ -106,6 +106,8 @@ Roadmap
 - [ ] add Apistry UI - Unique MVC view and template
 - release v1.2.x
 - [ ] add support for a TryItNow feature (in-browser client api explorer)
+- [ ] add Apistry -> Swagger DSL Generator
+- release
 
 Continuous Delivery
 ===================
