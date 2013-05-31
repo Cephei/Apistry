@@ -86,6 +86,10 @@ WebApiDocumentationMetadata metadata =
                 .Returns(HttpStatusCode.NoContent)
 ```
 
+Sample UI Generated Documentation
+-------------------------------------------------------
+![](http://apistry.wakingventure.com/ApistryExample.png "Example UI Mashup of Box.com and Google+ APIs")
+
 Continuous Delivery
 -------------------
 Current efforts are underway to bring Apistry to a production-ready state. This 
