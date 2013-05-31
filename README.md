@@ -94,16 +94,17 @@ Sample UI Generated Documentation
 
 Roadmap
 =======
-- [x] add support convention-based extensibility for request & reponse properties
+- [x] add support for convention-based extensibility point for request & reponse property inclusion/exclusion
 - [ ] refactor initial version codebase for maintainability
 - [ ] refactor documentation provider to support overriding of default behavior
 - [ ] fix lingering bugs
 - [ ] fix rendering of IEnumerable<> request & response examples (currently generates example as single)
 - [ ] add intellisense documentation already!
 - release v1.0.0
+- [ ] add support for DTO documentation via XML and attributes
 - [ ] add support for required & optional headers for both request & response
 - release v1.1.x
-- [ ] add Apistry UI - Unique MVC view and template
+- [ ] add Apistry UI - Apistry's UI starter template
 - release v1.2.x
 - [ ] add support for a TryItNow feature (in-browser client api explorer)
 - [ ] add Apistry -> Swagger DSL Generator
