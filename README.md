@@ -2,7 +2,7 @@ Apistry
 ========
 Apistry provides you the ability to document your existing ASP.NET Web API using static typing.
 
-But that's not all...
+But that's not all...  
 Document your DTOs and ApiControllers using a fluent, composable API. Based upon this metadata, Apistry will generate 
 documentation - creating: resource, method, parameter, property documentation and request/response examples. 
 
