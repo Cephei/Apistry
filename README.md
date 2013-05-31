@@ -7,9 +7,9 @@ But that's not all...
 Document your DTOs and ApiControllers using a fluent, composable API. Based upon this metadata, Apistry will generate 
 documentation - creating: resource, method, parameter, property documentation and request/response examples. 
 
-Apistry will even auto-generates documention for all un-documented DTOs and ApiControllers using intelligent reflection 
-techniques and leveraging AutoFixture and ObjectHydrator to create meaningful example data. You can then use this 
-finalized documentation to bind as an MVC model and render it out however you like.
+Apistry will even auto-generate documention for all un-documented DTOs and ApiControllers using reflection - leveraging 
+AutoFixture and ObjectHydrator to create meaningful example data. You can then use this finalized documentation to bind as an 
+MVC model and render it out however you like.
 
 Example
 =======
