@@ -99,6 +99,7 @@ Roadmap
 - [ ] refactor documentation provider to support overriding of default behavior
 - [ ] fix lingering bugs
 - [ ] fix rendering of IEnumerable<> request & response examples (currently generates example as single)
+- [ ] add intellisense documentation already!
 - release v1.0.0
 - [ ] add support for required & optional headers for both request & response
 - release v1.1.x
