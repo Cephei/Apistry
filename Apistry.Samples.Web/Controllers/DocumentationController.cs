@@ -21,9 +21,12 @@ namespace Apistry.Samples.Web.Controllers
 
             var apiActionDescriptions = apiExplorer.ApiDescriptions
                 .AsParallel()
-                .WithDegreeOfParallelism(1)
+                .WithDegreeOfParallelism(1) // for debugging
+                //.WithDegreeOfParallelism(Environment.ProcessorCount) // production
                 .Select(description => CreateApiActionDescription(description, docProvider))
                 .ToList();
+
+            // You should probably cache the above documentation and generate it only when needed.
 
             return View(apiActionDescriptions);
         }

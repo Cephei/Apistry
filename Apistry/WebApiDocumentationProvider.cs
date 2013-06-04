@@ -1,6 +1,7 @@
 ﻿namespace Apistry
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.Dynamic;
@@ -115,6 +116,7 @@
 
         public String GetDocumentation(HttpParameterDescriptor httpParameterDescriptor)
         {
+            return null;
             if (!_WebApiDocumentationMetadata.ApiControllerDocumentation.ContainsKey(httpParameterDescriptor.ActionDescriptor.ControllerDescriptor.ControllerType))
             {
                 return null;
@@ -183,7 +185,7 @@
                         : String.Empty
                 select new HttpActionRequestParameterDocumentation(
                     parameterDescriptor.ParameterName,
-                    parameterDescriptor.ParameterType.Name,
+                    GetProperyTypeName(parameterDescriptor.ParameterType),
                     parameterDescription,
                     !parameterDescriptor.IsOptional);
         }
@@ -202,7 +204,7 @@
                 return null;
             }
 
-            IDictionary<String, Object> requestBodyExample;
+            Object requestBodyExample;
             var parameterType = GetEnumerableType(formatterParameterBinding.Descriptor.ParameterType);
             if (_WebApiDocumentationMetadata.DtoDocumentation.ContainsKey(parameterType))
             {
@@ -217,7 +219,7 @@
             return requestBodyExample;
         }
 
-        private IDictionary<String, Object> CreateRequestBodyExample(HttpActionDescriptor httpActionDescriptor, DtoDocumentationMetadata dtoDocumentationMetadata)
+        private Object CreateRequestBodyExample(HttpActionDescriptor httpActionDescriptor, DtoDocumentationMetadata dtoDocumentationMetadata)
         {
             // Create an example DTO based off AutoFixture / ObjectHydrator conventions to be used as reference if properties aren't documented.
             var exampleObject = CreateInstanceOfType(dtoDocumentationMetadata.Type);
@@ -288,7 +290,10 @@
                 documentedProperties = CreatePropertyDocumentation(dtoDocumentationMetadata, String.Empty);
 
                 // Create an example response object.
-                responseExample = CreateResponseContentExample(dtoDocumentationMetadata);
+                responseExample = actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type.GetInterface("IEnumerable") != null ||
+                   actionDocumentationMetadata.HttpActionResponseDocumentationMetadata.Type.IsArray
+                       ? new[] { CreateResponseContentExample(dtoDocumentationMetadata) }
+                       : CreateResponseContentExample(dtoDocumentationMetadata);
             }
 
             return new HttpActionResponseDocumentation(
@@ -330,7 +335,7 @@
                     propertyDocumentation.Add(
                         new PropertyDocumentation(
                             GetPropertyNamePrefix(propertyDescriptor, propertyPrefix),
-                            GetProperyTypeName(propertyDescriptor),
+                            GetProperyTypeName(propertyDescriptor.PropertyType),
                             _WebApiDocumentationMetadata.DtoDocumentation[propertyDescriptor.PropertyType].Summary));
 
                     propertyDocumentation.AddRange(
@@ -348,7 +353,7 @@
                     propertyDocumentation.Add(
                         new PropertyDocumentation(
                             GetPropertyNamePrefix(propertyDescriptor, propertyPrefix),
-                            GetProperyTypeName(propertyDescriptor),
+                            GetProperyTypeName(propertyDescriptor.PropertyType),
                             _WebApiDocumentationMetadata.DtoDocumentation[genericPropertyType].Summary));
 
                     if (propertyPrefix.Contains(propertyDescriptor.Name) || genericPropertyType.Equals(dtoDocumentationMetadata.Type))
@@ -366,7 +371,7 @@
                     propertyDocumentation.Add(
                         new PropertyDocumentation(
                             GetPropertyNamePrefix(propertyDescriptor, propertyPrefix),
-                            GetProperyTypeName(propertyDescriptor),
+                            GetProperyTypeName(propertyDescriptor.PropertyType),
                             documentedProperty == null ? String.Empty : documentedProperty.Description));
                 }
             }
@@ -392,30 +397,30 @@
                 propertyName);
         }
 
-        private String GetProperyTypeName(PropertyDescriptor propertyDescriptor)
+        private String GetProperyTypeName(Type propertyType)
         {
-            if (propertyDescriptor.PropertyType.IsGenericType)
+            if (propertyType.IsGenericType)
             {
-                if (propertyDescriptor.PropertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
+                if (propertyType.GetGenericTypeDefinition() == typeof(IEnumerable<>))
                 {
-                    return String.Format("{0} (list)", propertyDescriptor.PropertyType.GetGenericArguments().Single().Name);
+                    return String.Format("{0} (list)", propertyType.GetGenericArguments().Single().Name);
                 }
 
-                if (propertyDescriptor.PropertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
+                if (propertyType.GetGenericTypeDefinition() == typeof(Nullable<>))
                 {
-                    return String.Format("{0} (nullable)", propertyDescriptor.PropertyType.GetGenericArguments().Single().Name);
+                    return String.Format("{0} (nullable)", propertyType.GetGenericArguments().Single().Name);
                 }
             }
-            else if (typeof(Byte[]).IsAssignableFrom(propertyDescriptor.PropertyType))
+            else if (typeof(Byte[]).IsAssignableFrom(propertyType))
             {
                 return "binary";
             }
-            else if (!TypeHelper.CanConvertFromString(propertyDescriptor.PropertyType))
+            else if (!TypeHelper.CanConvertFromString(propertyType))
             {
-                return String.Format("{0} (object)", propertyDescriptor.PropertyType.Name);
+                return String.Format("{0} (object)", propertyType.Name);
             }
 
-            return propertyDescriptor.PropertyType.Name;
+            return propertyType.Name;
         }
 
         private static Type GetResponseType(Type type)
@@ -513,11 +518,11 @@
             return new HttpActionRequestDocumentation(
                 actionDescriptor.GetParameters()
                                 .Where(p => p.ParameterBinderAttribute is FromUriAttribute || TypeHelper.CanConvertFromString(p.ParameterType))
-                                .Select(p => new HttpActionRequestParameterDocumentation(p.ParameterName, p.ParameterType.Name, String.Empty, !p.IsOptional)),
+                                .Select(p => new HttpActionRequestParameterDocumentation(p.ParameterName, GetProperyTypeName(p.ParameterType), String.Empty, !p.IsOptional)),
                 CreateHttpActionRequestBody(actionDescriptor));
         }
 
-        private IDictionary<String, Object> CreateDefaultRequestBodyExample(HttpActionDescriptor httpActionDescriptor, Type dto)
+        private Object CreateDefaultRequestBodyExample(HttpActionDescriptor httpActionDescriptor, Type dto)
         {
             // Create an example DTO based off AutoFixture / ObjectHydrator conventions to be used as reference if properties aren't documented.
             var exampleObject = CreateInstanceOfType(dto);
