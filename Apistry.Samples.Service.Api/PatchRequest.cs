@@ -4,7 +4,7 @@
 // </copyright>
 // --------------------------------------------------------------------------------------------------------------------
 
-namespace Apistry.Samples.Web.Models
+namespace Apistry.Samples.Service.Api
 {
     using System;
     using System.Collections.Generic;
@@ -14,5 +14,22 @@ namespace Apistry.Samples.Web.Models
     /// </summary>
     public class PatchRequest<TDto> : Dictionary<String, Object>
     {
+        public PatchRequest() : base(new CaseInsensitiveEqualityComparer())
+        {
+            
+        }
+
+        private class CaseInsensitiveEqualityComparer : IEqualityComparer<String>
+        {
+            public Boolean Equals(String x, String y)
+            {
+                return x.ToLowerInvariant().Equals(y.ToLowerInvariant());
+            }
+
+            public Int32 GetHashCode(String obj)
+            {
+                return obj.ToLowerInvariant().GetHashCode();
+            }
+        }
     }
 }

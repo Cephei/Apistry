@@ -1,4 +1,4 @@
-﻿namespace Apistry.Samples.Web.Models
+﻿namespace Apistry.Samples.Application.Dto
 {
     public class BlogDto
     {
