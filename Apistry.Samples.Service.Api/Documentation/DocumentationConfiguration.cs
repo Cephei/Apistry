@@ -9,7 +9,7 @@ namespace Apistry.Samples.Service.Api.Documentation
     using Apistry.Samples.Service.Api.Documentation.Conventions;
     using NContext.Extensions.AspNetWebApi.Configuration;
 
-    public class DocumentationBuilder : IConfigureWebApi
+    internal class DocumentationConfiguration : IConfigureWebApi
     {
         public void Configure(HttpConfiguration configuration)
         {

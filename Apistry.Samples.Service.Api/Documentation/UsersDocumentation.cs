@@ -6,6 +6,7 @@ namespace Apistry.Samples.Service.Api.Documentation
     using System.Net;
     using Apistry.Samples.Application.Dto;
     using Apistry.Samples.Service.Api.Controllers;
+    using Apistry.Samples.Service.Api.Patching;
 
     internal class UsersDocumentation : IBuildWebApiDocumentationMetadata
     {
@@ -78,10 +79,6 @@ namespace Apistry.Samples.Service.Api.Documentation
                         .Returns(HttpStatusCode.Created)
                         .Alert("This endpoint is only accessible by administrators.")
                         .Information("Important information regarding this endpoint.")
-                    .DescribeAction(c => c.PutUser(default(int), default(UserDto)))
-                        .Name("Update a User")
-                        .Summary("Update the entire user entity.")
-                        .Returns(HttpStatusCode.NoContent)
                     .Build();
         }
     }

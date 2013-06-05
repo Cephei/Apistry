@@ -4,7 +4,6 @@
     using System.Web.Routing;
 
     using Apistry.Samples.Presentation.Web.App_Start;
-
     using NContext.Configuration;
     using NContext.Extensions.AspNetWebApi.Configuration;
 
@@ -14,10 +13,6 @@
     {
         protected void Application_Start()
         {
-            AreaRegistration.RegisterAllAreas();
-            FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
-            RouteConfig.RegisterRoutes(RouteTable.Routes);
-
             ApplicationConfiguration appConfig =
                 new ApplicationConfigurationBuilder()
                     .ComposeForWeb(fileName => fileName.StartsWith("Apistry.Samples"))
@@ -26,6 +21,10 @@
                             .ConfigureForIIS();
 
             Configure.Using(appConfig);
+
+            AreaRegistration.RegisterAllAreas();
+            FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
+            RouteConfig.RegisterRoutes(RouteTable.Routes);
         }
     }
 }

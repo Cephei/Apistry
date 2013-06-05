@@ -7,6 +7,7 @@
     using System.Net.Http;
     using System.Web.Http;
     using Apistry.Samples.Application.Dto;
+    using Apistry.Samples.Service.Api.Patching;
 
     /// <summary>
     /// This defines a crude representation of an un-documented ApiController.
@@ -36,11 +37,6 @@
         public HttpResponseMessage PostBlog(BlogDto blog)
         {
             return Request.CreateResponse(HttpStatusCode.Created);
-        }
-
-        public HttpResponseMessage PutBlog(Int32 blogId, BlogDto blog)
-        {
-            return Request.CreateResponse(HttpStatusCode.NoContent);
         }
     }
 }
