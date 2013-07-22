@@ -3,7 +3,7 @@
   <PropertyGroup>
     <ApistryMajorVersion>1</ApistryMajorVersion>
     <ApistryMinorVersion>0</ApistryMinorVersion>
-    <ApistryPatchVersion>0</ApistryPatchVersion>
+    <ApistryPatchVersion>1</ApistryPatchVersion>
     <BuildNumber>$(BUILD_NUMBER)</BuildNumber> <!-- TeamCity Build -->
     <BuildVcsNumber>$(BUILD_VCS_NUMBER)</BuildVcsNumber> <!-- Git SHA -->
     <AssemblyInfoFile>$(MSBuildProjectDirectory)\..\AssemblyInfoShared.cs</AssemblyInfoFile>

@@ -5,6 +5,7 @@
     using System.Linq;
     using System.Net.Http;
     using System.Reflection;
+
     using Apistry.Conventions;
     using Apistry.Samples.Application.Dto;
 

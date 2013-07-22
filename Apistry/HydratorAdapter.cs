@@ -2,7 +2,9 @@
 {
     using System;
     using System.Reflection;
+
     using Foundation.ObjectHydrator.Interfaces;
+
     using Ploeh.AutoFixture.Kernel;
 
     public class HydratorAdapter : ISpecimenBuilder

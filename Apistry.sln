@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apistry.Tests.Specs", "Apis
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apistry.Samples.Presentation.Web", "Apistry.Samples.Presentation.Web\Apistry.Samples.Presentation.Web.csproj", "{DCD88F52-5663-4CFD-AE09-CFB86D1E3F41}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{A1931CC2-23EA-41D2-8434-A27ED67F3BF9}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".sample", ".sample", "{A1931CC2-23EA-41D2-8434-A27ED67F3BF9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = ".nuget", ".nuget", "{24E3A6EA-8C6E-47DE-9496-FEA583AA6BFA}"
 	ProjectSection(SolutionItems) = preProject

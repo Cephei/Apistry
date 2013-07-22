@@ -4,6 +4,7 @@
     using System.Web.Routing;
 
     using Apistry.Samples.Presentation.Web.App_Start;
+
     using NContext.Configuration;
     using NContext.Extensions.AspNetWebApi.Configuration;
 
@@ -17,7 +18,7 @@
                 new ApplicationConfigurationBuilder()
                     .ComposeForWeb(fileName => fileName.StartsWith("Apistry.Samples"))
                     .RegisterComponent<IManageWebApi>()
-                        .With<WebApiConfigurationBuilder>()
+                        .With<WebApiManagerBuilder>()
                             .ConfigureForIIS();
 
             Configure.Using(appConfig);
