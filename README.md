@@ -106,15 +106,13 @@ Roadmap
 - release v1.1.x
 - [ ] add Apistry UI - Apistry's UI starter template
 - release v1.2.x
-- [ ] add support for a TryItNow feature (in-browser client api explorer)
-- [ ] add Apistry -> Swagger DSL Generator
-- release
+- [ ] add support for Hydra / JSON-LD serialization
+- [ ] add support for a TryItNow feature (in-browser Hydra client api explorer)
+- release v2.0.0
 
 Continuous Delivery
 ===================
-Current efforts are underway to bring Apistry to a production-ready state. This 
-includes specification tests and an efficient build and deployment strategy.  To 
-accomplish this, I have set up the following environments for the community to use:
+The following environments are setup for on-demand build and deployments. To reduce AWS costs, the following servers are only online during deployments.  All NuGet packages are officially hosted on NuGet servers.
 
 **CI TeamCity Server:** *https://teamcity.wakingventure.com/*  
 **CI NuGet Package Source:** *https://nuget.wakingventure.com/*  
