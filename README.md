@@ -94,6 +94,8 @@ Sample UI Generated Documentation
 
 Roadmap
 =======
+**IMPORTANT:** *Apistry was originally written as a proof-of-concept.  The codebase will be re-written again from scratch quite soon.  The current state of this project is NOT production-ready.*
+
 - [x] add support for convention-based extensibility point for request & reponse property inclusion/exclusion
 - [ ] refactor initial version codebase for maintainability
 - [ ] refactor documentation provider to support overriding of default behavior
