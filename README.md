@@ -89,7 +89,7 @@ WebApiDocumentationMetadata metadata =
 
 Sample UI Generated Documentation
 ---------------------------------
-![](http://apistry.wakingventure.com/ApistryExample.png "Example UI Mashup of Box.com and Google+ APIs")  
+![](http://imageshack.com/a/img661/9889/L13U46.png "Example UI Mashup of Box.com and Google+ APIs")  
 
 
 Roadmap
