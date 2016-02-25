@@ -1,5 +1,6 @@
 Apistry
-========
+========  
+
 Apistry is in short, an ASP.NET Web API documentation provider. However, it is a smart alternative to your typical weakly-typed
 XML or DSL-based documentation. Apistry provides you the ability to document your existing ASP.NET Web API using static typing.
 
